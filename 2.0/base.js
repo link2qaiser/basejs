@@ -675,7 +675,7 @@ function loadModal(url, param, param2, param3) {
     param2 +
     "&param3=" +
     param3;
-  console.log(url);
+  console.log(site_url);
   $.ajax({
     type: "GET",
     cache: false,
@@ -1190,7 +1190,8 @@ $(document).ready(function() {
                     <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
                   </div>
                   <div class="form-group">
-                    <img src="{==IMAGEURL==}" height="200px">
+                   <label for="problem">Screenshot</label>
+                    <img src="{==IMAGEURL==}" >
                     <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
                   </div>
                 </div>
