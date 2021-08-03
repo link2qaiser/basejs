@@ -165,6 +165,34 @@ $(document).ready(function () {
     var viewer = ImageViewer();
     viewer.show($(this).attr("src"));
   });
+  /* 
+    Full Secreen image viewer 
+  */
+  $(document).on("click", "[data-pre-html]", function (event) {
+    var that = $(this);
+    var preHtml = that.html();
+    var state = that.attr("data-state");
+
+    that.html("working...");
+    $.ajax({
+      type: "GET",
+      cache: false,
+      url: that.attr("data-url"),
+      dataType: "json",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function (res) {
+        var attr = $(this).attr('name');
+        
+        that.html(preHtml);
+        if(state == 'true') 
+          that.attr("data-state","false");
+        else
+          that.attr("data-state","true");
+      },
+    });
+
+  });
+  
 
   
   
