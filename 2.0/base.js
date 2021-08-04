@@ -168,9 +168,11 @@ $(document).ready(function () {
   /* 
     Full Secreen image viewer 
   */
-  $(document).on("click", "[data-pre-html]", function (event) {
+  $(document).on("click", ".simple-request", function (event) {
     var that = $(this);
     var preHtml = that.html();
+    var postHtml = that.attr("data-post-html");
+
     var state = that.attr("data-state");
 
     that.html("working...");
@@ -182,8 +184,12 @@ $(document).ready(function () {
       headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
       success: function (res) {
         var attr = $(this).attr('name');
+        if (typeof postHtml !== 'undefined') {
+          that.html(postHtml);
+        }else {
+          that.html(preHtml);
+        }
         
-        that.html(preHtml);
         if(state == 'true') 
           that.attr("data-state","false");
         else
