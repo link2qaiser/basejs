@@ -165,6 +165,40 @@ $(document).ready(function () {
     var viewer = ImageViewer();
     viewer.show($(this).attr("src"));
   });
+  /* 
+    Full Secreen image viewer 
+  */
+  $(document).on("click", ".simple-request", function (event) {
+    var that = $(this);
+    var preHtml = that.html();
+    var postHtml = that.attr("data-post-html");
+
+    var state = that.attr("data-state");
+
+    that.html("working...");
+    $.ajax({
+      type: "GET",
+      cache: false,
+      url: that.attr("data-url"),
+      dataType: "json",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function (res) {
+        var attr = $(this).attr('name');
+        if (typeof postHtml !== 'undefined') {
+          that.html(postHtml);
+        }else {
+          that.html(preHtml);
+        }
+        
+        if(state == 'true') 
+          that.attr("data-state","false");
+        else
+          that.attr("data-state","true");
+      },
+    });
+
+  });
+  
 
   
   
@@ -675,7 +709,7 @@ function loadModal(url, param, param2, param3) {
     param2 +
     "&param3=" +
     param3;
-  console.log(url);
+  console.log(site_url);
   $.ajax({
     type: "GET",
     cache: false,
@@ -1190,7 +1224,8 @@ $(document).ready(function() {
                     <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
                   </div>
                   <div class="form-group">
-                    <img src="{==IMAGEURL==}" height="200px">
+                   <label for="problem">Screenshot</label>
+                    <img src="{==IMAGEURL==}" >
                     <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
                   </div>
                 </div>
