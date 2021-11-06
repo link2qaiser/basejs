@@ -20,13 +20,271 @@
     i) afterAajaxCall()
     
  */
-var site_url = "";
-var current_url = "";
 var paging_url = "";
 var sort_by = "";
 var order_by = "";
 var es = false;
+var baseJS = {
+  site_url:"",
+  current_url:"",
+  csrf_token:"",
+  
+  init: function(param) {
+    /*
+    Initailize the global variables
+    */
+    baseJS.site_url = param.site_url;
+    baseJS.current_url = param.current_url;
+    baseJS.csrf_token = $('meta[name="csrf-token"]').attr("content");
 
+    /*
+    ajaxModel Intialization
+    */
+    baseJS.ajaxModel.init();
+
+    /*
+    Edittable
+    */
+    baseJS.editable.init();
+    
+    
+  },
+  showNotification: function(msg, type) {
+    //toastr["success"](res.msg, "Completed!");
+  },
+  ajaxModel: {
+    init: function() {
+
+      $(document).ready(function() {
+
+        /*
+        Load Modal
+        */
+        $("body").after(`
+          <div class="modal fade bs-modal-lg" id="data_modal" role="dialog" aria-hidden="true" style="display: none;">
+             <div class="modal-dialog modal-lg all-modals">
+                <div class="modal-content"></div>
+             </div>
+          </div>
+        `);
+        $(document).on('click','[data-action="data_modal"]',function(e) {
+          let url = $(this).attr("data-url");
+          baseJS.ajaxModel.loadModal(url);
+        });
+      });
+
+      /* 
+      Make form submit ajax call
+      */
+      $(document).on("submit",'form[data-action="make_ajax"]', function (e) {
+        that = this;
+        e.preventDefault();
+        baseJS.ajaxModel.makeAjax(that);
+        return false;
+      });
+
+      /*
+      Delete Record
+      */
+      $(document).on("click",'[data-action="delete_record"]', function (e) {
+        that = this;
+        baseJS.ajaxModel.deleteRecord(that);
+      });
+
+      /*
+      EDIT THE NOTE / DESCRIPTION  / All fields
+      */
+     
+     
+
+    },
+    /*
+    Load Modal
+    */
+    loadModal:function(url) {
+      $("#data_modal .modal-content").html(
+        '<p style="text-align: center;"><br/> <i class="fa fa-spinner fa-spin"></i>  Please wait loading...</p>'
+      );
+      $.ajax({
+        type: "GET",
+        cache: false,
+        url: url,
+        //dataType: "json",
+        success: function (result) {
+          $(".all-modals .modal-content").html(result);
+          try {
+            FormInputMask.init();
+            ComponentsDateTimePickers.init();
+          }
+          catch(e) {
+            console.log("Unable to load Forminput | Timepickers");
+          }
+        },
+
+      });
+    },
+    /* 
+    Make form submit ajax call
+    */
+    makeAjax:function(that) {
+      var form = $(that).serialize();
+
+      var btn = $(that).find("button[type=submit]");
+      var btntxt = $(btn).html();
+
+      res = validateForm("form.make_ajax");
+
+      if (res.flag == false) {
+        res.dom.focus().scrollTop();
+        return false;
+      }
+      addWait(btn, "working...");
+      $.ajax({
+        type: $(that).attr("method"),
+        contentType: false,
+        cache: false,
+        processData: false,
+        dataType: "json",
+        url: $(that).attr("action"),
+        data: new FormData(that),
+        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+        success: function (res) {
+          removeWait(btn, btntxt);
+          afterAajaxCall('success',res);
+          return false;
+        },
+        error: function (err) {
+          console.log(err.responseJSON);
+          toastr["error"](err.responseJSON.message, "Alert!");
+          removeWait(btn, btntxt);
+          return false;
+        },
+      });
+    },
+
+    /*
+    Delete Record
+    */
+    deleteRecord:function(that) {
+      var attr = $(that).attr("data-action");
+      //confirm("Do you want to delete");
+      //addWaitWithoutText(this);
+      $.ajax({
+        type: "GET",
+        cache: false,
+        url: $(that).attr("data-url"),
+        dataType: "json",
+        headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
+        success: function (res) {
+          if (res.flag == true) {
+            if (res.action == "reload") {
+              window.location.reload();
+            } else {
+              baseJS.showNotification(res.flag, res.msg);
+              $(that).closest('tr').remove();
+            }
+          }
+        },
+      });
+    },
+  },
+  /*
+  EDIT THE NOTE / DESCRIPTION  / All fields
+  */
+  editable: {
+    init:function() {
+     $(document).ready(function(){
+      //Append edit button
+      var selector =  "#editable";
+      var preValue = "";
+      
+      $(selector + " [data-id]").append(' <a href="#" class="edit-button" >edit</a>');
+
+      $(document).on('click',selector+" .edit-button",function(e) {
+
+        let text = $(this).parent().clone().children().remove().end().text();
+        //console.log(text);
+        let input = $(this).parent().attr("data-input");
+        let field = $(this).parent().attr("data-field");
+        let dataId = $(this).parent().attr("data-id");
+
+        console.log(text);
+
+        preValue = text;
+
+        if(input == "text") {
+          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+        }
+        if(input == "textarea") {
+          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+        }
+        
+      });
+      $(document).on('click',selector+" .cancel-button",function(e) {
+        $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
+      });
+
+      $(document).on('click',selector+" .update-button",function(e) {
+        let text = $(this).closest(selector).find("[data-id]").find("input, textarea").val();
+        let field = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("name");
+        let dataId = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("data-id");
+        let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
+        var that = $(this);
+
+        //console.log(field);
+        //Make form  to send values
+        data = new FormData();
+        data.append(field, text);
+
+        jQuery.ajax({
+          type:"POST",
+          url: action ,
+          data:data,
+          contentType:false,
+          processData:false,
+          cache:false,
+          dataType: "json",
+          headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
+          success:function(res){
+              that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
+          },
+          error:function(error){
+            console.log(error);
+          }
+        });
+      });
+      /* 
+        Change Field Status <select>
+      */
+      $(document).on("change", selector+" .update-field", function (event) {
+          //Make form  to send values
+          data = new FormData();
+          data.append($(this).attr("name"), $(this).val());
+
+          let dataId = $(this).attr("data-id");
+          let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
+
+          $.ajax({
+            type:"POST",
+            url: action ,
+            data:data,
+            contentType:false,
+            processData:false,
+            cache:false,
+            dataType: "json",
+            headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+            success: function (res) {
+              if (res.flag == true) {
+                toastr["success"](res.msg, "Completed!");
+                
+              }
+            },
+          });
+        });
+      });
+    }
+  }
+}
 /* 
 --------------------START- Global Funtion ---------------------------------------
 */
@@ -202,32 +460,7 @@ $(document).ready(function () {
 
   
   
-  /* 
-  Delete Function 
-  */
-  $(document).on("click", ".list .delete", function (event) {
-    var remvove = $(this).attr("data-remove");
-    var attr = $(this).attr("data-action");
-    //confirm("Do you want to delete");
-    //addWaitWithoutText(this);
-    $.ajax({
-      type: "GET",
-      cache: false,
-      url: $(this).attr("data-url"),
-      dataType: "json",
-      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-      success: function (res) {
-        if (res.flag == true) {
-          toastr["success"](res.msg, "Completed!");
-          if (res.action == "reload") {
-            window.location.reload();
-          } else {
-            $("." + remvove).remove();
-          }
-        }
-      },
-    });
-  });
+  
 
   /*
   DELETE FROM MODAL
@@ -251,45 +484,7 @@ $(document).ready(function () {
   });
   
 
-  /* 
-  Make form submit ajax call
-  */
-  $(document).on("submit", "form.make_ajax", function (event) {
-
-    var form = $(this).serialize();
-
-    var btn = $(this).find("button[type=submit]");
-    var btntxt = $(btn).html();
-    res = validateForm("form.make_ajax");
-    if (res.flag == false) {
-      res.dom.focus().scrollTop();
-      return false;
-    }
-    addWait(btn, "working...");
-
-    $.ajax({
-      type: $(this).attr("method"),
-      contentType: false,
-      cache: false,
-      processData: false,
-      dataType: "json",
-      url: $(this).attr("action"),
-      data: new FormData(this),
-      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-      success: function (res) {
-        removeWait(btn, btntxt);
-        afterAajaxCall('success',res);
-        return false;
-      },
-      error: function (err) {
-        console.log(err.responseJSON);
-        toastr["error"](err.responseJSON.message, "Alert!");
-        removeWait(btn, btntxt);
-        return false;
-      },
-    });
-    return false;
-  });
+  
 
   /*
   Make Ajax call with files
@@ -693,44 +888,7 @@ var form = {
   },
 };
 
-function loadModal(url, param, param2, param3) {
-  $("#data_modal .modal-content").html(
-    '<p style="text-align: center;"><br/> <i class="fa fa-spinner fa-spin"></i>  Please wait loading...</p>'
-  );
 
-  if (typeof param === "undefined") param = null;
-  if (typeof param2 === "undefined") param2 = null;
-  if (typeof param3 === "undefined") param3 = null;
-  url =
-    site_url + url +
-    "?param=" +
-    param +
-    "&param2=" +
-    param2 +
-    "&param3=" +
-    param3;
-  console.log(site_url);
-  $.ajax({
-    type: "GET",
-    cache: false,
-    url: url,
-    //dataType: "json",
-    success: function (result) {
-      $(".all-modals .modal-content").html(result);
-      try {
-        FormInputMask.init();
-        ComponentsDateTimePickers.init();
-      }
-      catch(e) {
-        console.log("Unable to load Forminput | Timepickers");
-      }
-      
-      /*BootstrapDatepicker.init();
-            Select2.init();
-            FormRepeater.init();*/
-    },
-  });
-}
 try {
   toastr.options = {
     closeButton: true,
@@ -813,100 +971,7 @@ function initiateSelect2() {
   });
 }
 
-/*
-EDIT THE NOTE / DESCRIPTION  / All fields
-*/
-$(document).ready(function(){
-  //Append edit button
-  var selector =  "#editable";
-  var preValue = "";
-  
-  $(selector + " [data-id]").append(' <a href="#" class="edit-button" >edit</a>');
 
-  $(document).on('click',selector+" .edit-button",function(e) {
-
-    let text = $(this).parent().clone().children().remove().end().text();
-    //console.log(text);
-    let input = $(this).parent().attr("data-input");
-    let field = $(this).parent().attr("data-field");
-    let dataId = $(this).parent().attr("data-id");
-
-    console.log(text);
-
-    preValue = text;
-
-    if(input == "text") {
-      $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
-    }
-    if(input == "textarea") {
-      $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
-    }
-    
-  });
-  $(document).on('click',selector+" .cancel-button",function(e) {
-    $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
-  });
-
-  $(document).on('click',selector+" .update-button",function(e) {
-    let text = $(this).closest(selector).find("[data-id]").find("input, textarea").val();
-    let field = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("name");
-    let dataId = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("data-id");
-    let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
-    var that = $(this);
-
-    //console.log(field);
-    //Make form  to send values
-    data = new FormData();
-    data.append(field, text);
-
-    jQuery.ajax({
-      type:"POST",
-      url: action ,
-      data:data,
-      contentType:false,
-      processData:false,
-      cache:false,
-      dataType: "json",
-      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-      success:function(res){
-          that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
-      },
-      error:function(error){
-        console.log(error);
-      }
-    });
-  });
-  /* 
-    Change Field Status 
-  */
-  $(document).on("change", selector+" .update-field", function (event) {
-
-
-      //Make form  to send values
-      data = new FormData();
-      data.append($(this).attr("name"), $(this).val());
-
-      let dataId = $(this).attr("data-id");
-      let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
-
-      $.ajax({
-        type:"POST",
-        url: action ,
-        data:data,
-        contentType:false,
-        processData:false,
-        cache:false,
-        dataType: "json",
-        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-        success: function (res) {
-          if (res.flag == true) {
-            toastr["success"](res.msg, "Completed!");
-            
-          }
-        },
-      });
-    });
-  });
 
 /*
 Datatable with checkbox and action like wordpress 
