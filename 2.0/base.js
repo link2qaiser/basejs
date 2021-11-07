@@ -1,461 +1,32 @@
 /*
  *
  * CREATED AT 28 AUGUST 2018
- * UPDATE AT 7 NOVEMBER 2021
  * AUTHER : QAISER
  * TWITTER: @LINK2QAISER
  *
  */
-var es = false;
-var baseJS = {
-  site_url:"",
-  current_url:"",
-  csrf_token:"",
-  
-  init: function(param) {
-    /*
-    Initailize the global variables
-    */
-    baseJS.site_url = param.site_url;
-    baseJS.current_url = param.current_url;
-    baseJS.csrf_token = $('meta[name="csrf-token"]').attr("content");
-
-    /*
-    ajaxModel Intialization
-    */
-    baseJS.ajaxModel.init();
-
-    /*
-    Edittable
-    */
-    baseJS.editable.init();
-
-    /*
-    Submit a problem
-    */
-    baseJS.submitProblem.init();
-
-  },
-  showNotification: function(msg, type) {
-    //toastr["success"](res.msg, "Completed!");
-  },
-  formValidation: {
-    /*
-    FORM VALIDATION (still incomplete)
-    */
-    validate:function(dom) {
-      var inputs = $(
-        dom +
-          " input[type=text]," +
-          dom +
-          " textarea," +
-          dom +
-          " select," +
-          dom +
-          " input[type=password]"
-      );
-      var res = {};
-      res.flag = true;
-
-      inputs.each(function () {
-        val = $(this).val();
-        req = $(this).attr("required");
-
-        if (val == "" && req != undefined) {
-          if (res.flag == true) res.dom = $(this);
-          res.flag = false;
-
-          $(this).parent().addClass("has-danger");
-          $(this).addClass("border-danger");
-          var attr = $(this).attr("data-targeterror");
-          if (typeof attr !== typeof undefined && attr !== false) {
-            $(attr).addClass("has-danger");
-          }
-        } else {
-          type = $(this).attr("data-type");
-          req = $(this).attr("required");
-          if (typeof type != "undefined" && req != undefined) {
-            if (form.validate(type, val) == false) {
-              if (res.flag == true) res.dom = $(this);
-              res.flag = false;
-
-              $(this).parent().addClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).addClass("has-danger");
-              }
-            } else {
-              $(this).parent().removeClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).removeClass("has-danger");
-              }
-            }
-          } else {
-            $(this).parent().removeClass("has-danger");
-            $(this).removeClass("border-danger");
-            var attr = $(this).attr("data-targeterror");
-            if (typeof attr !== typeof undefined && attr !== false) {
-              $(attr).removeClass("has-danger");
-            }
-          }
-        }
-      });
-      return res;
-    }
-  },
-  /*
-  Voice Input
-  */
-  voiceInout: function() {
-    $(document).on('click',"#voice-input",function(e) {
-      let target = $(this).attr("data-target");
-      let lang = $(this).attr("data-lang");
-
-      //Add listing 
-      $(this).attr("placeholder","listing...");
-
-      if (window.hasOwnProperty('webkitSpeechRecognition')) {
-
-        var recognition = new webkitSpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.lang = lang;
-        recognition.start();
-
-        recognition.onresult = function(e) {
-          document.getElementById(target).value = e.results[0][0].transcript;
-          recognition.stop();
-        };
-
-        recognition.onerror = function(e) {
-          recognition.stop();
-        }
-
-      }
-    });
-  },
-  submitProblem : {
+ 
+ /*
+ Content
+ 1. Global Funtion
+    a) getRandomString()
+    b) extractExtension()
+    c) converToSEO()
+    d) addWait()
+    e) removeWait()
+    f) addWaitWithoutText()
+    g) removeWaitWithoutText()
+    h) ImportaddWaitWithoutText()
+    i) afterAajaxCall()
     
-    modal : `
-          <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-             <div class="modal-dialog" role="document">
-               <div class="modal-content">
-                 <div class="modal-header">
-                   <h5 class="modal-title" id="exampleModalLabel">Submit Problem</h5>
-                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                     <span aria-hidden="true">&times;</span>
-                   </button>
-                 </div>
-                 <form action="#">
-                    <div class="modal-body">
-                      <div class="form-group">
-                        <label for="problem">Problem</label>
-                        <textarea  class="form-control" id="problem" name="problem"></textarea>
-                      </div>
-                      <div class="form-group">
-                        <label for="problem">Link</label>
-                        <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
-                      </div>
-                      <div class="form-group">
-                       <label for="problem">Screenshot</label>
-                        <img src="{==IMAGEURL==}" >
-                        <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
-                    </div>
-                 </form>
-               </div>
-             </div>
-           </div>
-        `,
-      init: function () {
-        let container = "#submitProblem";
-        //Add convas JS
-        $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
+ */
+var site_url = "";
+var current_url = "";
+var paging_url = "";
+var sort_by = "";
+var order_by = "";
+var es = false;
 
-        //Append Sub Problem Button
-        $(container).append('<a class="button" href="javascript:void(0);">Submit Problem</a>');
-
-        //Get modal html
-        var modal = baseJS.submitProblem.modal;
-
-        //Load modal
-        $(document).on("click", container+" .button", function (event) {
-          html2canvas(document.querySelector("body")).then(canvas => {
-              let screenshot = canvas.toDataURL();
-
-              //Replace Screenshot
-              modal = modal.replace("{==IMAGEURL==}",screenshot);
-
-              //Show the modal
-              $(container).append(modal);
-              $("#submitProblemModal").modal('show');
-              $(container+" #screenshot").val(screenshot);
-          });
-        });
-
-        //Save Screenshot
-        $(document).on("click", container+" .save", function (event) {
-          if($(container+" #problem").val() == "") {$(container+" #problem").focus(); return;}
-
-          let link = window.location.href;
-          $.ajax({
-            type: "POST",
-            contentType: false,
-            cache: false,
-            processData: false,
-            dataType: "json",
-            url: $(container).attr("data-action"),
-            data: new FormData($(container +" form")[0]),
-            //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-            success: function (res) {
-              $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
-              $("#submitProblemModal .save").remove();
-            },
-          });
-        });
-      }
-      
-  },
-  ajaxModel: {
-    init: function() {
-
-      $(document).ready(function() {
-
-        /*
-        Load Modal
-        */
-        $("body").after(`
-          <div class="modal fade bs-modal-lg" id="data_modal" role="dialog" aria-hidden="true" style="display: none;">
-             <div class="modal-dialog modal-lg all-modals">
-                <div class="modal-content"></div>
-             </div>
-          </div>
-        `);
-        $(document).on('click','[data-action="data_modal"]',function(e) {
-          let url = $(this).attr("data-url");
-          baseJS.ajaxModel.loadModal(url);
-        });
-      });
-
-      /* 
-      Make form submit ajax call
-      */
-      $(document).on("submit",'form[data-action="make_ajax"]', function (e) {
-        that = this;
-        e.preventDefault();
-        baseJS.ajaxModel.makeAjax(that);
-        return false;
-      });
-
-      /*
-      Delete Record
-      */
-      $(document).on("click",'[data-action="delete_record"]', function (e) {
-        that = this;
-        baseJS.ajaxModel.deleteRecord(that);
-      });
-
-      /*
-      EDIT THE NOTE / DESCRIPTION  / All fields
-      */
-     
-     
-
-    },
-    /*
-    Load Modal
-    */
-    loadModal:function(url) {
-      $("#data_modal .modal-content").html(
-        '<p style="text-align: center;"><br/> <i class="fa fa-spinner fa-spin"></i>  Please wait loading...</p>'
-      );
-      $.ajax({
-        type: "GET",
-        cache: false,
-        url: url,
-        //dataType: "json",
-        success: function (result) {
-          $(".all-modals .modal-content").html(result);
-          try {
-            FormInputMask.init();
-            ComponentsDateTimePickers.init();
-          }
-          catch(e) {
-            console.log("Unable to load Forminput | Timepickers");
-          }
-        },
-
-      });
-    },
-    /* 
-    Make form submit ajax call
-    */
-    makeAjax:function(that) {
-      var form = $(that).serialize();
-
-      var btn = $(that).find("button[type=submit]");
-      var btntxt = $(btn).html();
-
-      res = formValidation.validate("form.make_ajax");
-
-      if (res.flag == false) {
-        res.dom.focus().scrollTop();
-        return false;
-      }
-      addWait(btn, "working...");
-      $.ajax({
-        type: $(that).attr("method"),
-        contentType: false,
-        cache: false,
-        processData: false,
-        dataType: "json",
-        url: $(that).attr("action"),
-        data: new FormData(that),
-        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-        success: function (res) {
-          removeWait(btn, btntxt);
-          afterAajaxCall('success',res);
-          return false;
-        },
-        error: function (err) {
-          console.log(err.responseJSON);
-          toastr["error"](err.responseJSON.message, "Alert!");
-          removeWait(btn, btntxt);
-          return false;
-        },
-      });
-    },
-
-    /*
-    Delete Record
-    */
-    deleteRecord:function(that) {
-      var attr = $(that).attr("data-action");
-      //confirm("Do you want to delete");
-      //addWaitWithoutText(this);
-      $.ajax({
-        type: "GET",
-        cache: false,
-        url: $(that).attr("data-url"),
-        dataType: "json",
-        headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
-        success: function (res) {
-          if (res.flag == true) {
-            if (res.action == "reload") {
-              window.location.reload();
-            } else {
-              baseJS.showNotification(res.flag, res.msg);
-              $(that).closest('tr').remove();
-            }
-          }
-        },
-      });
-    },
-  },
-  /*
-  EDIT THE NOTE / DESCRIPTION  / All fields
-  */
-  editable: {
-    init:function() {
-     $(document).ready(function(){
-      //Append edit button
-      var selector =  "#editable";
-      var preValue = "";
-      
-      $(selector + " [data-id]").append(' <a href="#" class="edit-button" >edit</a>');
-
-      $(document).on('click',selector+" .edit-button",function(e) {
-
-        let text = $(this).parent().clone().children().remove().end().text();
-        //console.log(text);
-        let input = $(this).parent().attr("data-input");
-        let field = $(this).parent().attr("data-field");
-        let dataId = $(this).parent().attr("data-id");
-
-        console.log(text);
-
-        preValue = text;
-
-        if(input == "text") {
-          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
-        }
-        if(input == "textarea") {
-          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
-        }
-        
-      });
-      $(document).on('click',selector+" .cancel-button",function(e) {
-        $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
-      });
-
-      $(document).on('click',selector+" .update-button",function(e) {
-        let text = $(this).closest(selector).find("[data-id]").find("input, textarea").val();
-        let field = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("name");
-        let dataId = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("data-id");
-        let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
-        var that = $(this);
-
-        //console.log(field);
-        //Make form  to send values
-        data = new FormData();
-        data.append(field, text);
-
-        jQuery.ajax({
-          type:"POST",
-          url: action ,
-          data:data,
-          contentType:false,
-          processData:false,
-          cache:false,
-          dataType: "json",
-          headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
-          success:function(res){
-              that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
-          },
-          error:function(error){
-            console.log(error);
-          }
-        });
-      });
-      /* 
-        Change Field Status <select>
-      */
-      $(document).on("change", selector+" .update-field", function (event) {
-          //Make form  to send values
-          data = new FormData();
-          data.append($(this).attr("name"), $(this).val());
-
-          let dataId = $(this).attr("data-id");
-          let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
-
-          $.ajax({
-            type:"POST",
-            url: action ,
-            data:data,
-            contentType:false,
-            processData:false,
-            cache:false,
-            dataType: "json",
-            headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-            success: function (res) {
-              if (res.flag == true) {
-                toastr["success"](res.msg, "Completed!");
-                
-              }
-            },
-          });
-        });
-      });
-    }
-  }
-  
-}
 /* 
 --------------------START- Global Funtion ---------------------------------------
 */
@@ -629,6 +200,96 @@ $(document).ready(function () {
   });
   
 
+  
+  
+  /* 
+  Delete Function 
+  */
+  $(document).on("click", ".list .delete", function (event) {
+    var remvove = $(this).attr("data-remove");
+    var attr = $(this).attr("data-action");
+    //confirm("Do you want to delete");
+    //addWaitWithoutText(this);
+    $.ajax({
+      type: "GET",
+      cache: false,
+      url: $(this).attr("data-url"),
+      dataType: "json",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function (res) {
+        if (res.flag == true) {
+          toastr["success"](res.msg, "Completed!");
+          if (res.action == "reload") {
+            window.location.reload();
+          } else {
+            $("." + remvove).remove();
+          }
+        }
+      },
+    });
+  });
+
+  /*
+  DELETE FROM MODAL
+  */
+  $(document).on("click", ".data-model .delete", function (event) {
+    addWaitWithoutText(this);
+    $.ajax({
+      type: "GET",
+      cache: false,
+      url: $(this).attr("data-url"),
+      dataType: "json",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function (res) {
+        if (res.flag == true) {
+          location.reload();
+        } else {
+          toastr["warning"](res.msg, "Oops!");
+        }
+      },
+    });
+  });
+  
+
+  /* 
+  Make form submit ajax call
+  */
+  $(document).on("submit", "form.make_ajax", function (event) {
+
+    var form = $(this).serialize();
+
+    var btn = $(this).find("button[type=submit]");
+    var btntxt = $(btn).html();
+    res = validateForm("form.make_ajax");
+    if (res.flag == false) {
+      res.dom.focus().scrollTop();
+      return false;
+    }
+    addWait(btn, "working...");
+
+    $.ajax({
+      type: $(this).attr("method"),
+      contentType: false,
+      cache: false,
+      processData: false,
+      dataType: "json",
+      url: $(this).attr("action"),
+      data: new FormData(this),
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success: function (res) {
+        removeWait(btn, btntxt);
+        afterAajaxCall('success',res);
+        return false;
+      },
+      error: function (err) {
+        console.log(err.responseJSON);
+        toastr["error"](err.responseJSON.message, "Alert!");
+        removeWait(btn, btntxt);
+        return false;
+      },
+    });
+    return false;
+  });
 
   /*
   Make Ajax call with files
@@ -937,7 +598,69 @@ function removeURLParameter(url, parameter) {
     return url;
   }
 }
+/*
+FORM VALIDATION (still incomplete)
+*/
+function validateForm(dom) {
+  var inputs = $(
+    dom +
+      " input[type=text]," +
+      dom +
+      " textarea," +
+      dom +
+      " select," +
+      dom +
+      " input[type=password]"
+  );
+  var res = {};
+  res.flag = true;
 
+  inputs.each(function () {
+    val = $(this).val();
+    req = $(this).attr("required");
+
+    if (val == "" && req != undefined) {
+      if (res.flag == true) res.dom = $(this);
+      res.flag = false;
+
+      $(this).parent().addClass("has-danger");
+      $(this).addClass("border-danger");
+      var attr = $(this).attr("data-targeterror");
+      if (typeof attr !== typeof undefined && attr !== false) {
+        $(attr).addClass("has-danger");
+      }
+    } else {
+      type = $(this).attr("data-type");
+      req = $(this).attr("required");
+      if (typeof type != "undefined" && req != undefined) {
+        if (form.validate(type, val) == false) {
+          if (res.flag == true) res.dom = $(this);
+          res.flag = false;
+
+          $(this).parent().addClass("has-danger");
+          var attr = $(this).attr("data-targeterror");
+          if (typeof attr !== typeof undefined && attr !== false) {
+            $(attr).addClass("has-danger");
+          }
+        } else {
+          $(this).parent().removeClass("has-danger");
+          var attr = $(this).attr("data-targeterror");
+          if (typeof attr !== typeof undefined && attr !== false) {
+            $(attr).removeClass("has-danger");
+          }
+        }
+      } else {
+        $(this).parent().removeClass("has-danger");
+        $(this).removeClass("border-danger");
+        var attr = $(this).attr("data-targeterror");
+        if (typeof attr !== typeof undefined && attr !== false) {
+          $(attr).removeClass("has-danger");
+        }
+      }
+    }
+  });
+  return res;
+}
 
 var form = {
   val: "",
@@ -970,7 +693,44 @@ var form = {
   },
 };
 
+function loadModal(url, param, param2, param3) {
+  $("#data_modal .modal-content").html(
+    '<p style="text-align: center;"><br/> <i class="fa fa-spinner fa-spin"></i>  Please wait loading...</p>'
+  );
 
+  if (typeof param === "undefined") param = null;
+  if (typeof param2 === "undefined") param2 = null;
+  if (typeof param3 === "undefined") param3 = null;
+  url =
+    site_url + url +
+    "?param=" +
+    param +
+    "&param2=" +
+    param2 +
+    "&param3=" +
+    param3;
+  console.log(site_url);
+  $.ajax({
+    type: "GET",
+    cache: false,
+    url: url,
+    //dataType: "json",
+    success: function (result) {
+      $(".all-modals .modal-content").html(result);
+      try {
+        FormInputMask.init();
+        ComponentsDateTimePickers.init();
+      }
+      catch(e) {
+        console.log("Unable to load Forminput | Timepickers");
+      }
+      
+      /*BootstrapDatepicker.init();
+            Select2.init();
+            FormRepeater.init();*/
+    },
+  });
+}
 try {
   toastr.options = {
     closeButton: true,
@@ -1053,7 +813,100 @@ function initiateSelect2() {
   });
 }
 
+/*
+EDIT THE NOTE / DESCRIPTION  / All fields
+*/
+$(document).ready(function(){
+  //Append edit button
+  var selector =  "#editable";
+  var preValue = "";
+  
+  $(selector + " [data-id]").append(' <a href="#" class="edit-button" >edit</a>');
 
+  $(document).on('click',selector+" .edit-button",function(e) {
+
+    let text = $(this).parent().clone().children().remove().end().text();
+    //console.log(text);
+    let input = $(this).parent().attr("data-input");
+    let field = $(this).parent().attr("data-field");
+    let dataId = $(this).parent().attr("data-id");
+
+    console.log(text);
+
+    preValue = text;
+
+    if(input == "text") {
+      $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+    }
+    if(input == "textarea") {
+      $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+    }
+    
+  });
+  $(document).on('click',selector+" .cancel-button",function(e) {
+    $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
+  });
+
+  $(document).on('click',selector+" .update-button",function(e) {
+    let text = $(this).closest(selector).find("[data-id]").find("input, textarea").val();
+    let field = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("name");
+    let dataId = $(this).closest(selector).find("[data-id]").find("input, textarea").attr("data-id");
+    let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
+    var that = $(this);
+
+    //console.log(field);
+    //Make form  to send values
+    data = new FormData();
+    data.append(field, text);
+
+    jQuery.ajax({
+      type:"POST",
+      url: action ,
+      data:data,
+      contentType:false,
+      processData:false,
+      cache:false,
+      dataType: "json",
+      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+      success:function(res){
+          that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
+      },
+      error:function(error){
+        console.log(error);
+      }
+    });
+  });
+  /* 
+    Change Field Status 
+  */
+  $(document).on("change", selector+" .update-field", function (event) {
+
+
+      //Make form  to send values
+      data = new FormData();
+      data.append($(this).attr("name"), $(this).val());
+
+      let dataId = $(this).attr("data-id");
+      let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
+
+      $.ajax({
+        type:"POST",
+        url: action ,
+        data:data,
+        contentType:false,
+        processData:false,
+        cache:false,
+        dataType: "json",
+        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+        success: function (res) {
+          if (res.flag == true) {
+            toastr["success"](res.msg, "Completed!");
+            
+          }
+        },
+      });
+    });
+  });
 
 /*
 Datatable with checkbox and action like wordpress 
@@ -1343,4 +1196,122 @@ $(document).ready(function() {
 
   });
   
+});
+$(document).ready(function() {
+/*
+------------------------------------------START - Submit Problem----------------------------------------------
+*/
+  var submitProblem = {
+    container : "#submitProblem",
+    modal : `
+      <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+         <div class="modal-dialog" role="document">
+           <div class="modal-content">
+             <div class="modal-header">
+               <h5 class="modal-title" id="exampleModalLabel">Submit Problem</h5>
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                 <span aria-hidden="true">&times;</span>
+               </button>
+             </div>
+             <form action="#">
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label for="problem">Problem</label>
+                    <textarea  class="form-control" id="problem" name="problem"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="problem">Link</label>
+                    <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
+                  </div>
+                  <div class="form-group">
+                   <label for="problem">Screenshot</label>
+                    <img src="{==IMAGEURL==}" >
+                    <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
+                </div>
+             </form>
+           </div>
+         </div>
+       </div>
+    `,
+    init: function () {
+      //Add convas JS
+      $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
+
+      //Append Sub Problem Button
+      $(submitProblem.container).append('<a class="button" href="javascript:void(0);">Submit Problem</a>');
+
+      //Get modal html
+      var modal = submitProblem.modal;
+
+      //Load modal
+      $(document).on("click", submitProblem.container+" .button", function (event) {
+        html2canvas(document.querySelector("body")).then(canvas => {
+            let screenshot = canvas.toDataURL();
+
+            //Replace Screenshot
+            modal = modal.replace("{==IMAGEURL==}",screenshot);
+
+            //Show the modal
+            $(submitProblem.container).append(modal);
+            $("#submitProblemModal").modal('show');
+            $(submitProblem.container+" #screenshot").val(screenshot);
+        });
+      });
+
+      //Save Screenshot
+      $(document).on("click", submitProblem.container+" .save", function (event) {
+        if($(submitProblem.container+" #problem").val() == "") {$(submitProblem.container+" #problem").focus(); return;}
+
+        let link = window.location.href;
+        $.ajax({
+          type: "POST",
+          contentType: false,
+          cache: false,
+          processData: false,
+          dataType: "json",
+          url: $(submitProblem.container).attr("data-action"),
+          data: new FormData($(submitProblem.container +" form")[0]),
+          //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+          success: function (res) {
+            $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
+            $("#submitProblemModal .save").remove();
+          },
+        });
+      });
+    }
+  }
+  submitProblem.init();
+});
+/* ---------------------------------Voice to text ------------------------------*/
+$(document).on('click',"#voice-input",function(e) {
+  let target = $(this).attr("data-target");
+  let lang = $(this).attr("data-lang");
+
+  //Add listing 
+  $(this).attr("placeholder","listing...");
+
+  if (window.hasOwnProperty('webkitSpeechRecognition')) {
+
+    var recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.lang = lang;
+    recognition.start();
+
+    recognition.onresult = function(e) {
+      document.getElementById(target).value = e.results[0][0].transcript;
+      recognition.stop();
+    };
+
+    recognition.onerror = function(e) {
+      recognition.stop();
+    }
+
+  }
 });
