@@ -1,28 +1,11 @@
 /*
  *
  * CREATED AT 28 AUGUST 2018
+ * UPDATE AT 7 NOVEMBER 2021
  * AUTHER : QAISER
  * TWITTER: @LINK2QAISER
  *
  */
- 
- /*
- Content
- 1. Global Funtion
-    a) getRandomString()
-    b) extractExtension()
-    c) converToSEO()
-    d) addWait()
-    e) removeWait()
-    f) addWaitWithoutText()
-    g) removeWaitWithoutText()
-    h) ImportaddWaitWithoutText()
-    i) afterAajaxCall()
-    
- */
-var paging_url = "";
-var sort_by = "";
-var order_by = "";
 var es = false;
 var baseJS = {
   site_url:"",
@@ -46,11 +29,198 @@ var baseJS = {
     Edittable
     */
     baseJS.editable.init();
-    
-    
+
+    /*
+    Submit a problem
+    */
+    baseJS.submitProblem.init();
+
   },
   showNotification: function(msg, type) {
     //toastr["success"](res.msg, "Completed!");
+  },
+  formValidation: {
+    /*
+    FORM VALIDATION (still incomplete)
+    */
+    validate:function(dom) {
+      var inputs = $(
+        dom +
+          " input[type=text]," +
+          dom +
+          " textarea," +
+          dom +
+          " select," +
+          dom +
+          " input[type=password]"
+      );
+      var res = {};
+      res.flag = true;
+
+      inputs.each(function () {
+        val = $(this).val();
+        req = $(this).attr("required");
+
+        if (val == "" && req != undefined) {
+          if (res.flag == true) res.dom = $(this);
+          res.flag = false;
+
+          $(this).parent().addClass("has-danger");
+          $(this).addClass("border-danger");
+          var attr = $(this).attr("data-targeterror");
+          if (typeof attr !== typeof undefined && attr !== false) {
+            $(attr).addClass("has-danger");
+          }
+        } else {
+          type = $(this).attr("data-type");
+          req = $(this).attr("required");
+          if (typeof type != "undefined" && req != undefined) {
+            if (form.validate(type, val) == false) {
+              if (res.flag == true) res.dom = $(this);
+              res.flag = false;
+
+              $(this).parent().addClass("has-danger");
+              var attr = $(this).attr("data-targeterror");
+              if (typeof attr !== typeof undefined && attr !== false) {
+                $(attr).addClass("has-danger");
+              }
+            } else {
+              $(this).parent().removeClass("has-danger");
+              var attr = $(this).attr("data-targeterror");
+              if (typeof attr !== typeof undefined && attr !== false) {
+                $(attr).removeClass("has-danger");
+              }
+            }
+          } else {
+            $(this).parent().removeClass("has-danger");
+            $(this).removeClass("border-danger");
+            var attr = $(this).attr("data-targeterror");
+            if (typeof attr !== typeof undefined && attr !== false) {
+              $(attr).removeClass("has-danger");
+            }
+          }
+        }
+      });
+      return res;
+    }
+  },
+  /*
+  Voice Input
+  */
+  voiceInout: function() {
+    $(document).on('click',"#voice-input",function(e) {
+      let target = $(this).attr("data-target");
+      let lang = $(this).attr("data-lang");
+
+      //Add listing 
+      $(this).attr("placeholder","listing...");
+
+      if (window.hasOwnProperty('webkitSpeechRecognition')) {
+
+        var recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.lang = lang;
+        recognition.start();
+
+        recognition.onresult = function(e) {
+          document.getElementById(target).value = e.results[0][0].transcript;
+          recognition.stop();
+        };
+
+        recognition.onerror = function(e) {
+          recognition.stop();
+        }
+
+      }
+    });
+  },
+  submitProblem : {
+    
+    modal : `
+          <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+             <div class="modal-dialog" role="document">
+               <div class="modal-content">
+                 <div class="modal-header">
+                   <h5 class="modal-title" id="exampleModalLabel">Submit Problem</h5>
+                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                     <span aria-hidden="true">&times;</span>
+                   </button>
+                 </div>
+                 <form action="#">
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="problem">Problem</label>
+                        <textarea  class="form-control" id="problem" name="problem"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="problem">Link</label>
+                        <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
+                      </div>
+                      <div class="form-group">
+                       <label for="problem">Screenshot</label>
+                        <img src="{==IMAGEURL==}" >
+                        <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
+                    </div>
+                 </form>
+               </div>
+             </div>
+           </div>
+        `,
+      init: function () {
+        let container = "#submitProblem";
+        //Add convas JS
+        $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
+
+        //Append Sub Problem Button
+        $(container).append('<a class="button" href="javascript:void(0);">Submit Problem</a>');
+
+        //Get modal html
+        var modal = baseJS.submitProblem.modal;
+
+        //Load modal
+        $(document).on("click", container+" .button", function (event) {
+          html2canvas(document.querySelector("body")).then(canvas => {
+              let screenshot = canvas.toDataURL();
+
+              //Replace Screenshot
+              modal = modal.replace("{==IMAGEURL==}",screenshot);
+
+              //Show the modal
+              $(container).append(modal);
+              $("#submitProblemModal").modal('show');
+              $(container+" #screenshot").val(screenshot);
+          });
+        });
+
+        //Save Screenshot
+        $(document).on("click", container+" .save", function (event) {
+          if($(container+" #problem").val() == "") {$(container+" #problem").focus(); return;}
+
+          let link = window.location.href;
+          $.ajax({
+            type: "POST",
+            contentType: false,
+            cache: false,
+            processData: false,
+            dataType: "json",
+            url: $(container).attr("data-action"),
+            data: new FormData($(container +" form")[0]),
+            //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+            success: function (res) {
+              $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
+              $("#submitProblemModal .save").remove();
+            },
+          });
+        });
+      }
+      
   },
   ajaxModel: {
     init: function() {
@@ -132,7 +302,7 @@ var baseJS = {
       var btn = $(that).find("button[type=submit]");
       var btntxt = $(btn).html();
 
-      res = validateForm("form.make_ajax");
+      res = formValidation.validate("form.make_ajax");
 
       if (res.flag == false) {
         res.dom.focus().scrollTop();
@@ -284,6 +454,7 @@ var baseJS = {
       });
     }
   }
+  
 }
 /* 
 --------------------START- Global Funtion ---------------------------------------
@@ -458,33 +629,6 @@ $(document).ready(function () {
   });
   
 
-  
-  
-  
-
-  /*
-  DELETE FROM MODAL
-  */
-  $(document).on("click", ".data-model .delete", function (event) {
-    addWaitWithoutText(this);
-    $.ajax({
-      type: "GET",
-      cache: false,
-      url: $(this).attr("data-url"),
-      dataType: "json",
-      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-      success: function (res) {
-        if (res.flag == true) {
-          location.reload();
-        } else {
-          toastr["warning"](res.msg, "Oops!");
-        }
-      },
-    });
-  });
-  
-
-  
 
   /*
   Make Ajax call with files
@@ -793,69 +937,7 @@ function removeURLParameter(url, parameter) {
     return url;
   }
 }
-/*
-FORM VALIDATION (still incomplete)
-*/
-function validateForm(dom) {
-  var inputs = $(
-    dom +
-      " input[type=text]," +
-      dom +
-      " textarea," +
-      dom +
-      " select," +
-      dom +
-      " input[type=password]"
-  );
-  var res = {};
-  res.flag = true;
 
-  inputs.each(function () {
-    val = $(this).val();
-    req = $(this).attr("required");
-
-    if (val == "" && req != undefined) {
-      if (res.flag == true) res.dom = $(this);
-      res.flag = false;
-
-      $(this).parent().addClass("has-danger");
-      $(this).addClass("border-danger");
-      var attr = $(this).attr("data-targeterror");
-      if (typeof attr !== typeof undefined && attr !== false) {
-        $(attr).addClass("has-danger");
-      }
-    } else {
-      type = $(this).attr("data-type");
-      req = $(this).attr("required");
-      if (typeof type != "undefined" && req != undefined) {
-        if (form.validate(type, val) == false) {
-          if (res.flag == true) res.dom = $(this);
-          res.flag = false;
-
-          $(this).parent().addClass("has-danger");
-          var attr = $(this).attr("data-targeterror");
-          if (typeof attr !== typeof undefined && attr !== false) {
-            $(attr).addClass("has-danger");
-          }
-        } else {
-          $(this).parent().removeClass("has-danger");
-          var attr = $(this).attr("data-targeterror");
-          if (typeof attr !== typeof undefined && attr !== false) {
-            $(attr).removeClass("has-danger");
-          }
-        }
-      } else {
-        $(this).parent().removeClass("has-danger");
-        $(this).removeClass("border-danger");
-        var attr = $(this).attr("data-targeterror");
-        if (typeof attr !== typeof undefined && attr !== false) {
-          $(attr).removeClass("has-danger");
-        }
-      }
-    }
-  });
-  return res;
-}
 
 var form = {
   val: "",
@@ -1261,122 +1343,4 @@ $(document).ready(function() {
 
   });
   
-});
-$(document).ready(function() {
-/*
-------------------------------------------START - Submit Problem----------------------------------------------
-*/
-  var submitProblem = {
-    container : "#submitProblem",
-    modal : `
-      <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-         <div class="modal-dialog" role="document">
-           <div class="modal-content">
-             <div class="modal-header">
-               <h5 class="modal-title" id="exampleModalLabel">Submit Problem</h5>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                 <span aria-hidden="true">&times;</span>
-               </button>
-             </div>
-             <form action="#">
-                <div class="modal-body">
-                  <div class="form-group">
-                    <label for="problem">Problem</label>
-                    <textarea  class="form-control" id="problem" name="problem"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="problem">Link</label>
-                    <input type="text" class="form-control" id="url" name="url" readonly value="`+window.location.href+`" />
-                  </div>
-                  <div class="form-group">
-                   <label for="problem">Screenshot</label>
-                    <img src="{==IMAGEURL==}" >
-                    <input type="hidden" class="form-control" id="screenshot" name="screenshot" value="" />
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
-                  <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
-                </div>
-             </form>
-           </div>
-         </div>
-       </div>
-    `,
-    init: function () {
-      //Add convas JS
-      $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
-
-      //Append Sub Problem Button
-      $(submitProblem.container).append('<a class="button" href="javascript:void(0);">Submit Problem</a>');
-
-      //Get modal html
-      var modal = submitProblem.modal;
-
-      //Load modal
-      $(document).on("click", submitProblem.container+" .button", function (event) {
-        html2canvas(document.querySelector("body")).then(canvas => {
-            let screenshot = canvas.toDataURL();
-
-            //Replace Screenshot
-            modal = modal.replace("{==IMAGEURL==}",screenshot);
-
-            //Show the modal
-            $(submitProblem.container).append(modal);
-            $("#submitProblemModal").modal('show');
-            $(submitProblem.container+" #screenshot").val(screenshot);
-        });
-      });
-
-      //Save Screenshot
-      $(document).on("click", submitProblem.container+" .save", function (event) {
-        if($(submitProblem.container+" #problem").val() == "") {$(submitProblem.container+" #problem").focus(); return;}
-
-        let link = window.location.href;
-        $.ajax({
-          type: "POST",
-          contentType: false,
-          cache: false,
-          processData: false,
-          dataType: "json",
-          url: $(submitProblem.container).attr("data-action"),
-          data: new FormData($(submitProblem.container +" form")[0]),
-          //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-          success: function (res) {
-            $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
-            $("#submitProblemModal .save").remove();
-          },
-        });
-      });
-    }
-  }
-  submitProblem.init();
-});
-/* ---------------------------------Voice to text ------------------------------*/
-$(document).on('click',"#voice-input",function(e) {
-  let target = $(this).attr("data-target");
-  let lang = $(this).attr("data-lang");
-
-  //Add listing 
-  $(this).attr("placeholder","listing...");
-
-  if (window.hasOwnProperty('webkitSpeechRecognition')) {
-
-    var recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.lang = lang;
-    recognition.start();
-
-    recognition.onresult = function(e) {
-      document.getElementById(target).value = e.results[0][0].transcript;
-      recognition.stop();
-    };
-
-    recognition.onerror = function(e) {
-      recognition.stop();
-    }
-
-  }
 });
