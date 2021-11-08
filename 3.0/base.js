@@ -35,6 +35,9 @@ var baseJS = {
     */
     baseJS.submitProblem.init();
 
+    /*bulk action*/
+    baseJS.bulkAction.init();
+
   },
   showNotification: function(msg, type) {
     //toastr["success"](res.msg, "Completed!");
@@ -452,6 +455,80 @@ var baseJS = {
           });
         });
       });
+    }
+  },
+  /*
+  Bulk Action
+  - HTML base
+  - Method (POST)
+  1. You must be have form with attribute `data-action="bulk-action"` and action (depend on url you want to submit request)
+  2. You must be have select list with button for example
+            <div class="form-inline " id="actions">
+              <div class="form-group ">
+                <select class="form-control form-control-sm">
+                  <option value="">Bulk Action</option>
+                  <option value="delete">Delete</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div class="form-group mx-sm-3">
+                <button type="button" class="btn btn-primary btn-sm m-btn">Apply</button>
+              </div>
+            </div>
+  3. Just add check box in th and td, (Remember first parent checkbox always will be in th rest of them in td)
+
+
+
+  */
+  bulkAction: {
+    init:function() {
+      $(document).on('change','form[data-action="bulk-action"] input[type="checkbox"]',function(e) {
+          if($(this).closest('th').length == 1) {
+             if($(this).prop("checked") == true){
+                $(this).closest('table').find('tbody').find("input[type='checkbox']").prop("checked", true);
+             }else {
+                $(this).closest('table').find('tbody').find("input[type='checkbox']").prop("checked", false);
+             }
+          }
+      });
+       $(document).on("click", 'form[data-action="bulk-action"] #actions button', function (event) {
+          let select = $(this).closest('#actions').find("select").val();
+          if(select == "")
+             return;
+          let action =  $(this).closest('form').attr("action");
+          if(action == "")
+             return;
+          let method = $(this).closest('form').attr("method"); 
+          if(method == "")
+             return;
+          let checkedCount =  $(this).closest('form').find("input[type='checkbox']:checked").length;
+          if(checkedCount == 0) {
+             return;
+          }
+          var form = $(this).closest('form').serialize();
+          var btn = this;
+          var btntxt = $(btn).html();
+          addWait(btn, "working...");
+          $.ajax({
+             type: "POST",
+             cache: false,
+             data: form,
+             url: action+"?action="+select,
+             dataType: "json",
+             headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+             success: function (res) {
+              removeWait(btn, btntxt);
+              afterAajaxCall('success',res);
+              return false;
+            },
+            error: function (err) {
+              removeWait(btn, btntxt);
+              afterAajaxCall('success',err);
+              return false;
+            },
+          });
+       });
     }
   }
   
@@ -1052,62 +1129,6 @@ function initiateSelect2() {
     theme: "bootstrap",
   });
 }
-
-
-
-/*
-Datatable with checkbox and action like wordpress 
-*/
-$(document).ready(function(){
-   $(document).on('change',"#data-table input[type='checkbox']",function(e) {
-      if($(this).closest('th').length == 1) {
-         if($(this).prop("checked") == true){
-            $(this).closest('table').find('tbody').find("input[type='checkbox']").prop("checked", true);
-         }else {
-            $(this).closest('table').find('tbody').find("input[type='checkbox']").prop("checked", false);
-         }
-      }
-  });
-   $(document).on("click", "#data-table #actions button", function (event) {
-      let select = $(this).closest('#actions').find("select").val();
-      if(select == "")
-         return;
-      let action =  $(this).closest('form').attr("action");
-      if(action == "")
-         return;
-      let method = $(this).closest('form').attr("method"); 
-      if(method == "")
-         return;
-      let checkedCount =  $(this).closest('form').find("input[type='checkbox']:checked").length;
-      if(checkedCount == 0) {
-         return;
-      }
-      var form = $(this).closest('form').serialize();
-      var btn = this;
-      var btntxt = $(btn).html();
-      addWait(btn, "working...");
-      $.ajax({
-         type: method,
-         cache: false,
-         data: form,
-         url: action+"/"+select,
-         dataType: "json",
-         headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-         success: function (res) {
-          removeWait(btn, btntxt);
-          afterAajaxCall('success',res);
-          return false;
-        },
-        error: function (err) {
-          removeWait(btn, btntxt);
-          afterAajaxCall('success',err);
-          return false;
-        },
-      });
-   });
-});
-
-
 
 /*
 ------------------------------------------------START - Comment box with screenshot upload-----------------------------------------------------
