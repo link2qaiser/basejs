@@ -256,6 +256,16 @@ var baseJS = {
         return false;
       });
 
+      /* 
+      Make form submit ajax call with file
+      */
+      $(document).on("submit",'form[data-action="make_ajax_file"]', function (e) {
+        that = this;
+        e.preventDefault();
+        baseJS.ajaxModel.makeAjaxWithFile(that);
+        return false;
+      });
+
       /*
       Delete Record
       */
@@ -305,7 +315,7 @@ var baseJS = {
       var btn = $(that).find("button[type=submit]");
       var btntxt = $(btn).html();
 
-      res = formValidation.validate("form.make_ajax");
+      res = baseJS.formValidation.validate("form.make_ajax");
 
       if (res.flag == false) {
         res.dom.focus().scrollTop();
@@ -327,12 +337,55 @@ var baseJS = {
           return false;
         },
         error: function (err) {
-          console.log(err.responseJSON);
           toastr["error"](err.responseJSON.message, "Alert!");
           removeWait(btn, btntxt);
           return false;
         },
       });
+    },
+
+    /*
+    Make ajax with file data
+    */
+    makeAjaxWithFile: function(that) {
+      
+      event.preventDefault();
+      var btn = $(that).find("button[type=submit]");
+      var btntxt = $(btn).html();
+      res = baseJS.formValidation.validate("form.make_ajax");
+
+      if (res.flag == false) {
+        res.dom.focus().scrollTop();
+        return false;
+      }
+      addWait(btn, "working");
+      $.ajax({
+        type: $(that).attr("method"),
+        contentType: false,
+        cache: false,
+        processData: false,
+        dataType: "json",
+        url: $(that).attr("action"),
+        data: new FormData(that),
+        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+        success: function (res) {
+          removeWait(btn, btntxt);
+          if (res.flag) toastr["success"](res.msg, "Completed!");
+          else toastr["warning"](res.msg, "Oops!");
+          if (res.action == "reload") {
+            window.location.reload();
+          } else if (res.action == "redirect") {
+            window.location.href = res.url;
+          } else {
+            $("." + remvove).remove();
+          }
+        },
+        error: function () {
+          removeWait(btn, btntxt);
+          toastr["error"]("Something went wrong", "Opps!");
+        },
+      });
+    
     },
 
     /*
@@ -370,8 +423,15 @@ var baseJS = {
       //Append edit button
       var selector =  "#editable";
       var preValue = "";
+
+      $(selector + " [data-id]").each(function(index, value) {
+        if($(this).attr("data-input") == "text" || $(this).attr("data-input") == "textarea") {
+          $(this).append(' <a href="#" class="edit-button" >edit</a>');
+        }
+        
+      });
       
-      $(selector + " [data-id]").append(' <a href="#" class="edit-button" >edit</a>');
+      
 
       $(document).on('click',selector+" .edit-button",function(e) {
 
@@ -429,12 +489,12 @@ var baseJS = {
       /* 
         Change Field Status <select>
       */
-      $(document).on("change", selector+" .update-field", function (event) {
+      $(document).on("change", selector+" [data-id] select, "+selector+" [data-id] checkbox", function (event) {
           //Make form  to send values
           data = new FormData();
           data.append($(this).attr("name"), $(this).val());
 
-          let dataId = $(this).attr("data-id");
+          let dataId = $(this).closest('td').attr("data-id");
           let action = $(this).closest(selector).attr("data-url")+"/"+dataId;
 
           $.ajax({
@@ -448,7 +508,7 @@ var baseJS = {
             headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
             success: function (res) {
               if (res.flag == true) {
-                toastr["success"](res.msg, "Completed!");
+                //toastr["success"](res.msg, "Completed!");
                 
               }
             },
@@ -518,13 +578,9 @@ var baseJS = {
              dataType: "json",
              headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
              success: function (res) {
-              removeWait(btn, btntxt);
-              afterAajaxCall('success',res);
               return false;
             },
             error: function (err) {
-              removeWait(btn, btntxt);
-              afterAajaxCall('success',err);
               return false;
             },
           });
@@ -710,44 +766,7 @@ $(document).ready(function () {
   /*
   Make Ajax call with files
   */
-  $(document).on("submit", "form.make_file_ajax", function (event) {
-    event.preventDefault();
-    var btn = $(this).find("button[type=submit]");
-    var btntxt = $(btn).html();
-    res = validateForm("form.make_file_ajax");
-    if (res.flag == false) {
-      res.dom.focus().scrollTop();
-      return false;
-    }
-    addWait(btn, "working");
-    $.ajax({
-      type: $(this).attr("method"),
-      contentType: false,
-      cache: false,
-      processData: false,
-      dataType: "json",
-      url: $(this).attr("action"),
-      data: new FormData(this),
-      headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
-      success: function (res) {
-        removeWait(btn, btntxt);
-        if (res.flag) toastr["success"](res.msg, "Completed!");
-        else toastr["warning"](res.msg, "Oops!");
-        if (res.action == "reload") {
-          window.location.reload();
-        } else if (res.action == "redirect") {
-          window.location.href = res.url;
-        } else {
-          $("." + remvove).remove();
-        }
-      },
-      error: function () {
-        removeWait(btn, btntxt);
-        toastr["error"]("Something went wrong", "Opps!");
-      },
-    });
-    return false;
-  });
+  
   $(document).on("submit", "form.make_ajax_model", function (event) {
     var form = $(this).serialize();
     var btn = "form.make_ajax_model button[type=submit]";
