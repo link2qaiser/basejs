@@ -6,6 +6,10 @@
  * TWITTER: @LINK2QAISER
  *
  */
+ en = {
+  "SAVE_CHANGES": "Save changes",
+
+ }
 var es = false;
 var baseJS = {
   site_url:"",
