@@ -6,16 +6,76 @@
  * TWITTER: @LINK2QAISER
  *
  */
- en = {
-  "SAVE_CHANGES": "Save changes",
 
- }
-var es = false;
 var baseJS = {
   site_url:"",
   current_url:"",
   csrf_token:"",
-  
+  cdn:"http://localhost:8080/global-script",
+  /*
+  Some global methods
+  */
+  loadScript: function(url, callback) {
+      jQuery.ajax({
+          url: url,
+          dataType: 'script',
+          success: callback,
+          async: true
+      });
+    
+  },
+  loadCSS:function( url, media, callback ) {
+    jQuery( document.createElement('link') ).attr({
+        href: url,
+        media: media || 'screen',
+        type: 'text/css',
+        rel: 'stylesheet'
+    }).appendTo('head')
+    .on("load", callback);
+  },
+  // After Every ajax call
+  afterAajaxCall:function(status, res) {
+
+    if(status == 'success')  {
+
+      if (res.flag == true) {
+        try { 
+          baseJS.notification.showSucess(res.msg);
+        } catch(e) {}
+        
+      }
+      if (res.flag == false) {
+        try { 
+          baseJS.notification.showError(res.msg);
+        } catch(e) {}
+        
+      }
+      //Redirection
+      if (res.action == "close") {
+        $("#data_modal").modal("hide");
+
+      } else if (res.action == "reload") {
+        window.location.reload();
+
+      } else if (res.action == "redirect") {
+        window.location.href = res.url;
+
+      } else {
+        try{
+          $("." + remvove).remove();
+        }catch(err){
+          //
+        }
+
+      }
+    }
+    else if(status == 'error')  {
+    
+      try { 
+          baseJS.notification.showError(res.msg);
+        } catch(e) {}
+    }
+  },
   init: function(param) {
     /*
     Initailize the global variables
@@ -23,6 +83,14 @@ var baseJS = {
     baseJS.site_url = param.site_url;
     baseJS.current_url = param.current_url;
     baseJS.csrf_token = $('meta[name="csrf-token"]').attr("content");
+
+    /*
+    Initailize notification
+    */
+    if (param.notif !== undefined) {
+      baseJS.notification.init(param.notif);
+    }
+    
 
     /*
     ajaxModel Intialization
@@ -43,8 +111,31 @@ var baseJS = {
     baseJS.bulkAction.init();
 
   },
-  showNotification: function(msg, type) {
-    //toastr["success"](res.msg, "Completed!");
+  
+    
+  
+  notification: {
+    init: function(param) {
+      if(param.type == "toastr") {
+        baseJS.notification.toaster(param.options);
+      }
+    },
+    toaster: function(options) {
+      baseJS.loadScript(baseJS.cdn+'/plugins/toastr/toastr.min.js');
+      baseJS.loadCSS(baseJS.cdn+'/plugins/toastr/toastr.min.css');
+    },
+    showSucess: function(msg) {
+      toastr["success"](msg, "Completed!");
+    },
+    showInfo: function(msg) {
+      toastr["info"](msg, "Info!");
+    },
+    showWarning: function(msg) {
+      toastr["warning"](msg,"Warning!");
+    },
+    showError: function(msg) {
+      toastr["error"](msg,"Error!");
+    }
   },
   formValidation: {
     /*
@@ -337,7 +428,7 @@ var baseJS = {
         headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
         success: function (res) {
           removeWait(btn, btntxt);
-          afterAajaxCall('success',res);
+          baseJS.afterAajaxCall('success',res);
           return false;
         },
         error: function (err) {
@@ -410,7 +501,7 @@ var baseJS = {
             if (res.action == "reload") {
               window.location.reload();
             } else {
-              baseJS.showNotification(res.flag, res.msg);
+              baseJS.afterAajaxCall("success", res);
               $(that).closest('tr').remove();
             }
           }
@@ -661,43 +752,9 @@ function ImportaddWaitWithoutText(dom) {
   $(dom).html(string);
 }
 
-// AFTER AJAX CALL
-function afterAajaxCall(status, res) {
-  if(status == 'success')  {
-    if (res.flag == true) {
-      try { 
-        toastr["success"](res.msg, "Completed!");
-      } catch(e) {}
-      
-    }
-    if (res.flag == false) {
-      try { 
-        toastr["error"](res.msg, "Alert!");
-      } catch(e) {}
-      
-    }
-    if (res.action == "close") {
-      $("#data_modal").modal("hide");
-    } else if (res.action == "reload") {
-      window.location.reload();
-    } else if (res.action == "redirect") {
-      window.location.href = res.url;
-    } else {
-      $("." + remvove).remove();
-    }
-  }
-  else if(status == 'error')  {
-  
-    try { 
-        toastr["error"](res.msg, "Alert!");
-      } catch(e) {}
-  }
-}
+
 
 $(document).ready(function () {
-  site_url = $("#site_url").html();
-  current_url = $("#current_url").html();
-
   /*
   SEO URL
   */
@@ -767,51 +824,6 @@ $(document).ready(function () {
   
 
 
-  /*
-  Make Ajax call with files
-  */
-  
-  $(document).on("submit", "form.make_ajax_model", function (event) {
-    var form = $(this).serialize();
-    var btn = "form.make_ajax_model button[type=submit]";
-    var btntxt = $(btn).html();
-    
-    $.ajax({
-      type: $(this).attr("method"),
-      cache: false,
-      url: $(this).attr("action") + "?" + form,
-      dataType: "json",
-      headers: {
-        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-      },
-      success: function (res) {
-        removeWait(btn, btntxt);
-        if (res.flag) {
-          $(".make_ajax_model select").val(null).trigger("change");
-          $(".make_ajax_model").trigger("reset");
-          if (JSON.parse(res.attached) == true) {
-            key_number = JSON.parse(res.key_number);
-            office_id = JSON.parse(res.office_id);
-            listing_id = JSON.parse(res.list_ids);
-            loadModal(
-              "key-override",
-              listing_id +
-                "&office_id=" +
-                office_id +
-                "&key_number=" +
-                key_number +
-                "&seperate= "
-            );
-          } else {
-            location.reload();
-          }
-        } else {
-          toastr["warning"](res.msg, "Oops!");
-        }
-      },
-    });
-    return false;
-  });
 
   /* 
   FORM VALIDATION CODE 
@@ -1159,7 +1171,6 @@ function initiateSelect2() {
 //CONTAINER 
 var container = "#commentBox";
 $(document).ready(function() {
-  
   /*
   Detect Paste event to uplooad the image
   */
