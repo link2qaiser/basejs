@@ -90,6 +90,14 @@ var baseJS = {
     if (param.notif !== undefined) {
       baseJS.notification.init(param.notif);
     }
+
+
+    /*
+    Initailize input masking
+    */
+    if (param.imasking !== undefined) {
+      baseJS.inputMasking.init();
+    }
     
 
     /*
@@ -113,7 +121,51 @@ var baseJS = {
   },
   
     
-  
+  inputMasking: {
+    init: function() {
+      baseJS.loadScript(baseJS.cdn+'/plugins/input-masking/jquery.inputmask.min.js', baseJS.inputMasking.customMasking);
+    },
+    customMasking: function() {
+      //console.log("test");
+      $(document).on("keypress", '[data-mask="no-space"]', function (event) {
+        if (event.keyCode == 32) {
+          return false;
+        }
+      });
+      $('[data-mask]').each(function( index ) {
+        let mask = $(this).attr("data-mask");
+        let prefix = $(this).attr("data-prefix");
+        let isNeg = $(this).attr("data-negtive");
+        let isPoint = $(this).attr("data-point");
+        let format = $(this).attr("data-format");
+        
+
+        if(mask == "price") {
+          $(this).inputmask("decimal", {prefix: prefix+" ", radixPoint: ".", digits: 2, autoGroup: true, groupSeparator: ",", allowMinus: false }
+);  
+        }
+        if(mask == "decimal") {
+          var obj = {};
+          if(isNeg == "false") obj['allowMinus'] = false;
+          if(isPoint == "false") obj['digits'] = '0';
+          $(this).inputmask("decimal",obj);  
+        }
+        if(mask == "year") {
+          $(this).inputmask("9999");  
+        }
+        if(mask == "phone") {
+          $(this).inputmask(format);  
+        }
+        if(mask == "datetime") {
+          $(this).inputmask("datetime",{inputFormat:format});  
+        }
+        
+    
+        
+      });
+    }
+    
+  },
   notification: {
     init: function(param) {
       if(param.type == "toastr") {
@@ -391,8 +443,7 @@ var baseJS = {
         success: function (result) {
           $(".all-modals .modal-content").html(result);
           try {
-            FormInputMask.init();
-            ComponentsDateTimePickers.init();
+            baseJS.inputMasking.customMasking();
           }
           catch(e) {
             console.log("Unable to load Forminput | Timepickers");
@@ -763,16 +814,6 @@ $(document).ready(function () {
     let target = $(this).attr("data-target");
     $(target).val(converToSEO(val));
   });
-
-  /*
-  NO SPACE
-  */
-  $(document).on("keypress", ".nospace", function (event) {
-    if (event.keyCode == 32) {
-        return false;
-    }
-  });
-
   /*
   UPDAT TEXT OF ONE FILED WHEN TEXT OF SECOND FILED UPDATED
   */
