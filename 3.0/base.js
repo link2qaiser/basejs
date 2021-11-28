@@ -76,6 +76,15 @@ var baseJS = {
         } catch(e) {}
     }
   },
+  slugify: function(txt_src) {
+   var output = txt_src.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,"-").toLowerCase();
+   /* remove first dash */
+   if(output.charAt(0) == '-') output = output.substring(1);
+   /* remove last dash */
+   var last = output.length-1;
+   if(output.charAt(last) == '-') output = output.substring(0, last);
+   return output;
+  },
   init: function(param) {
     /*
     Initailize the global variables
@@ -131,6 +140,11 @@ var baseJS = {
         if (event.keyCode == 32) {
           return false;
         }
+      });
+      $(document).on("keyup", '[data-mask="slugify"]', function (event) {
+        let val = $(this).val();
+        let target = $(this).attr("data-target");
+        $(target).val(baseJS.slugify(val));
       });
       $('[data-mask]').each(function( index ) {
         let mask = $(this).attr("data-mask");
@@ -763,18 +777,6 @@ function extractExtension(fileName) {
   return fileName.substr(fileName.lastIndexOf('.') + 1);
 }
 
-// SEO URL method
-function converToSEO(txt_src){
- var output = txt_src.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,"-").toLowerCase();
- /* remove first dash */
- if(output.charAt(0) == '-') output = output.substring(1);
- /* remove last dash */
- var last = output.length-1;
- if(output.charAt(last) == '-') output = output.substring(0, last);
- 
- return output;
-}
-
 
 // Add wait before ajax
 function addWait(dom, lable) {
@@ -812,14 +814,7 @@ function ImportaddWaitWithoutText(dom) {
 
 
 $(document).ready(function () {
-  /*
-  SEO URL
-  */
-  $(document).on("keyup", ".seo-url", function (event) {
-    let val = $(this).val();
-    let target = $(this).attr("data-target");
-    $(target).val(converToSEO(val));
-  });
+  
   /*
   UPDAT TEXT OF ONE FILED WHEN TEXT OF SECOND FILED UPDATED
   */
