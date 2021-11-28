@@ -441,12 +441,6 @@ var baseJS = {
         baseJS.ajaxModel.deleteRecord(that);
       });
 
-      /*
-      EDIT THE NOTE / DESCRIPTION  / All fields
-      */
-     
-     
-
     },
     /*
     Load Modal
@@ -587,7 +581,7 @@ var baseJS = {
     init:function() {
      $(document).ready(function(){
       //Append edit button
-      var selector =  "#editable";
+      var selector =  '[data-action="editable"]';
       var preValue = "";
 
       $(selector + " [data-id]").each(function(index, value) {
