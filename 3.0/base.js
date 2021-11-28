@@ -11,7 +11,7 @@ var baseJS = {
   site_url:"",
   current_url:"",
   csrf_token:"",
-  cdn:"https://dixeam/cdn",
+  cdn:"https://dixeam.com/cdn",
   /*
   Some global methods
   */
