@@ -11,7 +11,7 @@ var baseJS = {
   site_url:"",
   current_url:"",
   csrf_token:"",
-  cdn:"http://localhost:8080/global-script",
+  cdn:"https://dixeam/cdn",
   /*
   Some global methods
   */
