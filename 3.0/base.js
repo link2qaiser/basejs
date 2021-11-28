@@ -159,6 +159,12 @@ var baseJS = {
         if(mask == "datetime") {
           $(this).inputmask("datetime",{inputFormat:format});  
         }
+        if(mask == "uppercase") {
+          $(this).css("text-transform","uppercase");
+        }
+        if(mask == "lowercase") {
+          $(this).css("text-transform","lowercase");  
+        }
         
     
         
