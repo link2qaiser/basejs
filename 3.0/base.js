@@ -107,6 +107,13 @@ var baseJS = {
     if (param.imasking !== undefined) {
       baseJS.inputMasking.init();
     }
+
+    /*
+    Initailize select2
+    */
+    if (param.select2 !== undefined) {
+      baseJS.select2.init();
+    }
     
 
     /*
@@ -127,9 +134,32 @@ var baseJS = {
     /*bulk action*/
     baseJS.bulkAction.init();
 
+    
+
   },
   
-    
+  select2:{
+    init: function() {
+      baseJS.loadScript(baseJS.cdn+'/plugins/select2/js/select2.min.js', baseJS.select2.customSelect2);
+      baseJS.loadCSS(baseJS.cdn+'/plugins/select2/css/select2.min.css');
+      
+    },
+    customSelect2 : function() {
+      $('[data-s2="true"]').each(function( index ) {
+        $(this).select2();
+      });
+      
+    },
+    initModal : function() {
+      $('[data-s2="true"]').select2({
+        // placeholder: " ",
+        // allowClear: true,
+        // dropdownParent: $("#data_modal"),
+        // theme: "bootstrap",
+      });
+    }
+
+  },
   inputMasking: {
     init: function() {
       baseJS.loadScript(baseJS.cdn+'/plugins/input-masking/jquery.inputmask.min.js', baseJS.inputMasking.customMasking);
@@ -462,6 +492,13 @@ var baseJS = {
           catch(e) {
             console.log("Unable to load Forminput | Timepickers");
           }
+          try {
+            baseJS.select2.initModal();
+          }
+          catch(e) {
+            console.log("Unable to load select2");
+          }
+          
         },
 
       });
@@ -1181,25 +1218,7 @@ $(".upload-image").change(function () {
   readURL(this);
 });
 
-/*
-SELECT2
-*/
-try {
-  $(".select2box").select2({
-    placeholder: "Select One",
-    enableFiltering: true,
-    allowClear: true,
-  });
-}catch(err) {console.log("selct 2 is not deined")}
 
-function initiateSelect2() {
-  $(".select2").select2({
-    placeholder: " ",
-    allowClear: true,
-    dropdownParent: $("#data_modal"),
-    theme: "bootstrap",
-  });
-}
 
 /*
 ------------------------------------------------START - Comment box with screenshot upload-----------------------------------------------------
