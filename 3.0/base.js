@@ -148,7 +148,60 @@ var baseJS = {
       $('[data-s2="true"]').each(function( index ) {
         $(this).select2();
       });
+      $('[data-s2-ajax="true"]').each(function( index ) {
+        var placeholder = $(this).attr("data-placeholder");
+        var dataUrl = $(this).attr("data-url");
+
+        $(this).select2({
+          placeholder: placeholder,
+          allowClear: true,
+          //dropdownParent: jQuery(parent),
+          ajax: {
+            url: dataUrl,
+            dataType: "json",
+            processResults: function (data) {
+              // for (i = 0; i < data.length; i++) {
+              //   data[i]["text"] = data[i]["Name"] + " - " + data[i]["Code"];
+              //   data[i]["id"] = data[i]["ite_id"];
+              // }
+              return {
+                results: data,
+              };
+            },
+          },
+          // escapeMarkup: function (d) {
+          //   return d;
+          // },
+          // templateResult: function (d) {
+          //   try {
+          //     Name = d.Name;
+          //   } catch (err) {
+          //     Name = "";
+          //   }
+          //   try {
+          //     Code = d.Code;
+          //   } catch (err) {
+          //     Code = "";
+          //   }
+
+          //   return $(
+          //     '<table width="100%;"><tbody><tr><td>' +
+          //       Name +
+          //       '</td><td align="right">Code: ' +
+          //       Code +
+          //       "</td></tr><tbody></table>"
+          //   );
+          // },
+
+          // processResults: function (d) {
+          //   cnic = typeof d.cnic == "undefined" ? "" : " (" + d.cnic + ")";
+          //   return d.text + cnic;
+          // },
+          minimumInputLength: 1,
+        });
+      });
       
+
     },
     initModal : function() {
       $('[data-s2="true"]').select2({
@@ -156,6 +209,58 @@ var baseJS = {
         // allowClear: true,
         // dropdownParent: $("#data_modal"),
         // theme: "bootstrap",
+      });
+      $('[data-s2-ajax="true"]').each(function( index ) {
+        var placeholder = $(this).attr("data-placeholder");
+        var dataUrl = $(this).attr("data-url");
+
+        $(this).select2({
+          placeholder: placeholder,
+          allowClear: true,
+          //dropdownParent: jQuery(parent),
+          ajax: {
+            url: dataUrl,
+            dataType: "json",
+            processResults: function (data) {
+              // for (i = 0; i < data.length; i++) {
+              //   data[i]["text"] = data[i]["Name"] + " - " + data[i]["Code"];
+              //   data[i]["id"] = data[i]["ite_id"];
+              // }
+              return {
+                results: data,
+              };
+            },
+          },
+          // escapeMarkup: function (d) {
+          //   return d;
+          // },
+          // templateResult: function (d) {
+          //   try {
+          //     Name = d.Name;
+          //   } catch (err) {
+          //     Name = "";
+          //   }
+          //   try {
+          //     Code = d.Code;
+          //   } catch (err) {
+          //     Code = "";
+          //   }
+
+          //   return $(
+          //     '<table width="100%;"><tbody><tr><td>' +
+          //       Name +
+          //       '</td><td align="right">Code: ' +
+          //       Code +
+          //       "</td></tr><tbody></table>"
+          //   );
+          // },
+
+          // processResults: function (d) {
+          //   cnic = typeof d.cnic == "undefined" ? "" : " (" + d.cnic + ")";
+          //   return d.text + cnic;
+          // },
+          minimumInputLength: 1,
+        });
       });
     }
 
