@@ -134,6 +134,10 @@ var baseJS = {
     /*bulk action*/
     baseJS.bulkAction.init();
 
+    /* Form vaidation */
+    baseJS.formValidation.init();
+
+
     
 
   },
@@ -345,10 +349,32 @@ var baseJS = {
     }
   },
   formValidation: {
+    init: function() {
+      $(document).on("keyup", "input[type=text], input[type=password], textarea", function (event) {
+
+        let val = $(this).val().trim();
+        let req = $(this).attr("data-required");
+        
+        if(val == "") {
+          if (val == "" && req != undefined) {
+            $(this).addClass("border-danger");
+            if(!$(this).next("small").length) {
+              $(this).after('<small class="text-danger">This field is required</small>'); 
+            }
+          }
+        }else {
+          console.log(val);
+          $(this).removeClass("border-danger");
+          $(this).next("small").remove()
+        }
+      });
+    },
     /*
     FORM VALIDATION (still incomplete)
     */
     validate:function(dom) {
+      
+      
       var inputs = $(
         dom +
           " input[type=text]," +
@@ -357,52 +383,25 @@ var baseJS = {
           dom +
           " select," +
           dom +
-          " input[type=password]"
+          " input[type=password]" +
+          dom +
+          " input[type=checkbox]"
       );
       var res = {};
       res.flag = true;
 
       inputs.each(function () {
-        val = $(this).val();
-        req = $(this).attr("required");
+        let val = $(this).val().trim();
+        let req = $(this).attr("data-required");
 
+        var i = 0;
         if (val == "" && req != undefined) {
-          if (res.flag == true) res.dom = $(this);
+          if(i == 0) (this).focus();
+          i++;
           res.flag = false;
-
-          $(this).parent().addClass("has-danger");
           $(this).addClass("border-danger");
-          var attr = $(this).attr("data-targeterror");
-          if (typeof attr !== typeof undefined && attr !== false) {
-            $(attr).addClass("has-danger");
-          }
-        } else {
-          type = $(this).attr("data-type");
-          req = $(this).attr("required");
-          if (typeof type != "undefined" && req != undefined) {
-            if (form.validate(type, val) == false) {
-              if (res.flag == true) res.dom = $(this);
-              res.flag = false;
-
-              $(this).parent().addClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).addClass("has-danger");
-              }
-            } else {
-              $(this).parent().removeClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).removeClass("has-danger");
-              }
-            }
-          } else {
-            $(this).parent().removeClass("has-danger");
-            $(this).removeClass("border-danger");
-            var attr = $(this).attr("data-targeterror");
-            if (typeof attr !== typeof undefined && attr !== false) {
-              $(attr).removeClass("has-danger");
-            }
+          if(!$(this).next("small").length) {
+            $(this).after('<small class="text-danger">This field is required</small>'); 
           }
         }
       });
@@ -617,12 +616,10 @@ var baseJS = {
       var btn = $(that).find("button[type=submit]");
       var btntxt = $(btn).html();
 
-      res = baseJS.formValidation.validate("form.make_ajax");
+      let iValid = baseJS.formValidation.validate('form[data-action="make_ajax"]');
 
-      if (res.flag == false) {
-        res.dom.focus().scrollTop();
-        return false;
-      }
+      if (iValid.flag == false) return false;
+    
       addWait(btn, "working...");
       $.ajax({
         type: $(that).attr("method"),
@@ -1130,80 +1127,6 @@ $(document).ready(function () {
   });
 });
 /*
-DASHBOARD DATE RANGE PICKER FORM SUBMIT
-*/
-initDashboardDaterange = function() {
-    if (!jQuery().daterangepicker) {
-        return;
-    }
-    //qaiser here
-    $('#header-date-range').daterangepicker({
-        "ranges": {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-            'Last 7 Days': [moment().subtract('days', 6), moment()],
-            'Last 30 Days': [moment().subtract('days', 29), moment()],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-        },
-        maxDate: new Date(),
-        startDate: $("#daterangeform #start_date").val(),
-        endDate: $("#daterangeform #end_date").val(),
-        "locale": {
-            "format": "YYYY-MM-DD",
-            "separator": " - ",
-            "applyLabel": "Apply",
-            "cancelLabel": "Cancel",
-            "fromLabel": "From",
-            "toLabel": "To",
-            "customRangeLabel": "Custom",
-            "daysOfWeek": [
-                "Su",
-                "Mo",
-                "Tu",
-                "We",
-                "Th",
-                "Fr",
-                "Sa"
-            ],
-            "monthNames": [
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December"
-            ],
-            "firstDay": 1
-        },
-        //"startDate": "11/08/2015",
-        //"endDate": "11/14/2015",
-        opens: (App.isRTL() ? 'right' : 'left'),
-    }, function(start, end, label) {
-        if ($('#header-date-range').attr('data-display-range') != '0') {
-            $('#header-date-range span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        }
-        $("#daterangeform #start_date").val(start.format("YYYY-MM-DD",));
-        $("#daterangeform #end_date").val(end.format("YYYY-MM-DD",));
-        
-        $("#daterangeform").submit();
-    });
-
-     if ($('#header-date-range').attr('data-display-range') != '0') {
-        start_date = moment($("#daterangeform #start_date").val()).format('MMMM D, YYYY');
-        end_date = moment($("#daterangeform #end_date").val()).format('MMMM D, YYYY');
-
-        $('#header-date-range span').html(start_date + ' - ' + end_date);
-    }
-    $('#header-date-range').show();
-}
-/*
 FUNCTION REMOVE PARAMTER FROM QUERY STRING
 */
 function removeURLParameter(url, parameter) {
@@ -1259,27 +1182,6 @@ var form = {
     return regexp.test(this.val);
   },
 };
-
-
-try {
-  toastr.options = {
-    closeButton: true,
-    debug: false,
-    positionClass: "toast-top-right",
-    onclick: null,
-    showDuration: "1000",
-    hideDuration: "1000",
-    timeOut: "5000",
-    extendedTimeOut: "1000",
-    showEasing: "swing",
-    hideEasing: "linear",
-    showMethod: "fadeIn",
-    hideMethod: "fadeOut",
-  };
-}
-catch(e) {
-    console.log('toastr is not defined');
-}
 
 
 function readURL(input) {
