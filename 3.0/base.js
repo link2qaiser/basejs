@@ -12,6 +12,8 @@ var baseJS = {
   current_url:"",
   csrf_token:"",
   cdn:"https://dixeam.com/cdn",
+
+  lang: {},
   /*
   Some global methods
   */
@@ -87,6 +89,16 @@ var baseJS = {
   },
   init: function(param) {
     /*
+    Intialize the Language
+    */
+    
+    baseJS.loadScript(baseJS.cdn+'/basejs/3.0/lang/'+param.lang+".js",function(){
+      baseJS.lang = lang;
+      baseJS.loadLibs(param);
+    });
+  },
+  loadLibs: function(param) {
+    /*
     Initailize the global variables
     */
     baseJS.site_url = param.site_url;
@@ -136,9 +148,6 @@ var baseJS = {
 
     /* Form vaidation */
     baseJS.formValidation.init();
-
-
-    
 
   },
   
@@ -369,6 +378,16 @@ var baseJS = {
         }
       });
     },
+
+    validateEmail:function(email){
+      const validateEmail = (email) => {
+        return String(email)
+          .toLowerCase()
+          .match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          );
+      };
+    },
     /*
     FORM VALIDATION (still incomplete)
     */
@@ -442,7 +461,11 @@ var baseJS = {
   },
   submitProblem : {
     
-    modal : `
+
+      modal : '',
+      init: function () {
+
+        baseJS.submitProblem.modal  = `
           <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
              <div class="modal-dialog" role="document">
                <div class="modal-content">
@@ -470,14 +493,13 @@ var baseJS = {
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
+                      <button type="button" class="btn btn-primary btn-sm save" >`+baseJS.lang.SAVE_CHANGES+`</button>
                     </div>
                  </form>
                </div>
              </div>
            </div>
-        `,
-      init: function () {
+        `;
         let container = "#submitProblem";
         //Add convas JS
         $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
@@ -518,7 +540,7 @@ var baseJS = {
             data: new FormData($(container +" form")[0]),
             //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
             success: function (res) {
-              $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
+              $("#submitProblemModal .modal-body").html('<p>'+baseJS.lang.ProHBS+'</p>');
               $("#submitProblemModal .save").remove();
             },
           });
@@ -620,7 +642,7 @@ var baseJS = {
 
       if (iValid.flag == false) return false;
     
-      addWait(btn, "working...");
+      addWait(btn, baseJS.lang.WORKING+"...");
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -636,7 +658,7 @@ var baseJS = {
           return false;
         },
         error: function (err) {
-          toastr["error"](err.responseJSON.message, "Alert!");
+          baseJS.afterAajaxCall('error',err.responseJSON.message);
           removeWait(btn, btntxt);
           return false;
         },
@@ -657,7 +679,7 @@ var baseJS = {
         res.dom.focus().scrollTop();
         return false;
       }
-      addWait(btn, "working");
+      addWait(btn, baseJS.lang.WORKING);
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -725,7 +747,7 @@ var baseJS = {
 
       $(selector + " [data-id]").each(function(index, value) {
         if($(this).attr("data-input") == "text" || $(this).attr("data-input") == "textarea") {
-          $(this).append(' <a href="#" class="edit-button" >edit</a>');
+          $(this).append(' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'</a>');
         }
         
       });
@@ -745,15 +767,15 @@ var baseJS = {
         preValue = text;
 
         if(input == "text") {
-          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> '+baseJS.lang.UPDATE+' </a>| <a href="javascript:void(0)" class="cancel-button"> '+baseJS.lang.CANCEL+' </a>');
         }
         if(input == "textarea") {
-          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> '+baseJS.lang.UPDATE+' </a>| <a href="javascript:void(0)" class="cancel-button"> '+baseJS.lang.CANCEL+' </a>');
         }
         
       });
       $(document).on('click',selector+" .cancel-button",function(e) {
-        $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
+        $(this).parent().html(preValue+' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'<a/>');
       });
 
       $(document).on('click',selector+" .update-button",function(e) {
@@ -778,7 +800,7 @@ var baseJS = {
           dataType: "json",
           headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
           success:function(res){
-              that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
+              that.parent().html(text+' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'<a/>');
           },
           error:function(error){
             console.log(error);
@@ -868,7 +890,7 @@ var baseJS = {
           var form = $(this).closest('form').serialize();
           var btn = this;
           var btntxt = $(btn).html();
-          addWait(btn, "working...");
+          addWait(btn, baseJS.lang.WORKING+"...");
           $.ajax({
              type: "POST",
              cache: false,
