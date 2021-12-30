@@ -300,6 +300,7 @@ var baseJS = {
         let isNeg = $(this).attr("data-negtive");
         let isPoint = $(this).attr("data-point");
         let format = $(this).attr("data-format");
+        let placeholder = $(this).attr("data-placeholder");
         
 
         if(mask == "price") {
@@ -310,6 +311,7 @@ var baseJS = {
           var obj = {};
           if(isNeg == "false") obj['allowMinus'] = false;
           if(isPoint == "false") obj['digits'] = '0';
+          obj['placeholder'] = placeholder;
           $(this).inputmask("decimal",obj);  
         }
         if(mask == "year") {
