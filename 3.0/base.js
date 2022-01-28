@@ -11,7 +11,9 @@ var baseJS = {
   site_url:"",
   current_url:"",
   csrf_token:"",
-  cdn:"http://localhost:8080/global-script",
+  cdn:"https://dixeam.com/cdn",
+
+  lang: {},
   /*
   Some global methods
   */
@@ -76,7 +78,26 @@ var baseJS = {
         } catch(e) {}
     }
   },
+  slugify: function(txt_src) {
+   var output = txt_src.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,"-").toLowerCase();
+   /* remove first dash */
+   if(output.charAt(0) == '-') output = output.substring(1);
+   /* remove last dash */
+   var last = output.length-1;
+   if(output.charAt(last) == '-') output = output.substring(0, last);
+   return output;
+  },
   init: function(param) {
+    /*
+    Intialize the Language
+    */
+    
+    baseJS.loadScript(baseJS.cdn+'/basejs/3.0/lang/'+param.lang+".js",function(){
+      baseJS.lang = lang;
+      baseJS.loadLibs(param);
+    });
+  },
+  loadLibs: function(param) {
     /*
     Initailize the global variables
     */
@@ -89,6 +110,21 @@ var baseJS = {
     */
     if (param.notif !== undefined) {
       baseJS.notification.init(param.notif);
+    }
+
+
+    /*
+    Initailize input masking
+    */
+    if (param.imasking !== undefined) {
+      baseJS.inputMasking.init();
+    }
+
+    /*
+    Initailize select2
+    */
+    if (param.select2 !== undefined) {
+      baseJS.select2.init();
     }
     
 
@@ -110,10 +146,196 @@ var baseJS = {
     /*bulk action*/
     baseJS.bulkAction.init();
 
+    /* Form vaidation */
+    baseJS.formValidation.init();
+
   },
   
+  select2:{
+    init: function() {
+      baseJS.loadScript(baseJS.cdn+'/plugins/select2/js/select2.min.js', baseJS.select2.customSelect2);
+      baseJS.loadCSS(baseJS.cdn+'/plugins/select2/css/select2.min.css');
+      
+    },
+    customSelect2 : function() {
+      $('[data-s2="true"]').each(function( index ) {
+        $(this).select2();
+      });
+      $('[data-s2-ajax="true"]').each(function( index ) {
+        var placeholder = $(this).attr("data-placeholder");
+        var dataUrl = $(this).attr("data-url");
+
+        $(this).select2({
+          placeholder: placeholder,
+          allowClear: true,
+          //dropdownParent: jQuery(parent),
+          ajax: {
+            url: dataUrl,
+            dataType: "json",
+            processResults: function (data) {
+              // for (i = 0; i < data.length; i++) {
+              //   data[i]["text"] = data[i]["Name"] + " - " + data[i]["Code"];
+              //   data[i]["id"] = data[i]["ite_id"];
+              // }
+              return {
+                results: data,
+              };
+            },
+          },
+          // escapeMarkup: function (d) {
+          //   return d;
+          // },
+          // templateResult: function (d) {
+          //   try {
+          //     Name = d.Name;
+          //   } catch (err) {
+          //     Name = "";
+          //   }
+          //   try {
+          //     Code = d.Code;
+          //   } catch (err) {
+          //     Code = "";
+          //   }
+
+          //   return $(
+          //     '<table width="100%;"><tbody><tr><td>' +
+          //       Name +
+          //       '</td><td align="right">Code: ' +
+          //       Code +
+          //       "</td></tr><tbody></table>"
+          //   );
+          // },
+
+          // processResults: function (d) {
+          //   cnic = typeof d.cnic == "undefined" ? "" : " (" + d.cnic + ")";
+          //   return d.text + cnic;
+          // },
+          minimumInputLength: 1,
+        });
+      });
+      
+
+    },
+    initModal : function() {
+      $('[data-s2="true"]').select2({
+        // placeholder: " ",
+        // allowClear: true,
+        // dropdownParent: $("#data_modal"),
+        // theme: "bootstrap",
+      });
+      $('[data-s2-ajax="true"]').each(function( index ) {
+        var placeholder = $(this).attr("data-placeholder");
+        var dataUrl = $(this).attr("data-url");
+
+        $(this).select2({
+          placeholder: placeholder,
+          allowClear: true,
+          //dropdownParent: jQuery(parent),
+          ajax: {
+            url: dataUrl,
+            dataType: "json",
+            processResults: function (data) {
+              // for (i = 0; i < data.length; i++) {
+              //   data[i]["text"] = data[i]["Name"] + " - " + data[i]["Code"];
+              //   data[i]["id"] = data[i]["ite_id"];
+              // }
+              return {
+                results: data,
+              };
+            },
+          },
+          // escapeMarkup: function (d) {
+          //   return d;
+          // },
+          // templateResult: function (d) {
+          //   try {
+          //     Name = d.Name;
+          //   } catch (err) {
+          //     Name = "";
+          //   }
+          //   try {
+          //     Code = d.Code;
+          //   } catch (err) {
+          //     Code = "";
+          //   }
+
+          //   return $(
+          //     '<table width="100%;"><tbody><tr><td>' +
+          //       Name +
+          //       '</td><td align="right">Code: ' +
+          //       Code +
+          //       "</td></tr><tbody></table>"
+          //   );
+          // },
+
+          // processResults: function (d) {
+          //   cnic = typeof d.cnic == "undefined" ? "" : " (" + d.cnic + ")";
+          //   return d.text + cnic;
+          // },
+          minimumInputLength: 1,
+        });
+      });
+    }
+
+  },
+  inputMasking: {
+    init: function() {
+      baseJS.loadScript(baseJS.cdn+'/plugins/input-masking/jquery.inputmask.min.js', baseJS.inputMasking.customMasking);
+    },
+    customMasking: function() {
+      //console.log("test");
+      $(document).on("keypress", '[data-mask="no-space"]', function (event) {
+        if (event.keyCode == 32) {
+          return false;
+        }
+      });
+      $(document).on("keyup", '[data-mask="slugify"]', function (event) {
+        let val = $(this).val();
+        let target = $(this).attr("data-target");
+        $(target).val(baseJS.slugify(val));
+      });
+      $('[data-mask]').each(function( index ) {
+        let mask = $(this).attr("data-mask");
+        let prefix = $(this).attr("data-prefix");
+        let isNeg = $(this).attr("data-negtive");
+        let isPoint = $(this).attr("data-point");
+        let format = $(this).attr("data-format");
+        let placeholder = $(this).attr("data-placeholder");
+        
+
+        if(mask == "price") {
+          $(this).inputmask("decimal", {prefix: prefix+" ", radixPoint: ".", digits: 2, autoGroup: true, groupSeparator: ",", allowMinus: false }
+);  
+        }
+        if(mask == "decimal") {
+          var obj = {};
+          if(isNeg == "false") obj['allowMinus'] = false;
+          if(isPoint == "false") obj['digits'] = '0';
+          obj['placeholder'] = placeholder;
+          $(this).inputmask("decimal",obj);  
+        }
+        if(mask == "year") {
+          $(this).inputmask("9999");  
+        }
+        if(mask == "phone") {
+          $(this).inputmask(format);  
+        }
+        if(mask == "datetime") {
+          $(this).inputmask("datetime",{inputFormat:format});  
+        }
+        if(mask == "uppercase") {
+          $(this).css("text-transform","uppercase");
+        }
+        if(mask == "lowercase") {
+          $(this).css("text-transform","lowercase");  
+        }
+        
     
-  
+        
+      });
+    }
+    
+  },
   notification: {
     init: function(param) {
       if(param.type == "toastr") {
@@ -138,10 +360,41 @@ var baseJS = {
     }
   },
   formValidation: {
+    init: function() {
+      $(document).on("keyup", "input[type=text], input[type=password], textarea", function (event) {
+
+        let val = $(this).val().trim();
+        let req = $(this).attr("data-required");
+        
+        if(val == "") {
+          if (val == "" && req != undefined) {
+            $(this).addClass("border-danger");
+            if(!$(this).next("small").length) {
+              $(this).after('<small class="text-danger">This field is required</small>'); 
+            }
+          }
+        }else {
+          $(this).removeClass("border-danger");
+          $(this).next("small").remove()
+        }
+      });
+    },
+
+    validateEmail:function(email){
+      const validateEmail = (email) => {
+        return String(email)
+          .toLowerCase()
+          .match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          );
+      };
+    },
     /*
     FORM VALIDATION (still incomplete)
     */
     validate:function(dom) {
+      
+      
       var inputs = $(
         dom +
           " input[type=text]," +
@@ -150,52 +403,25 @@ var baseJS = {
           dom +
           " select," +
           dom +
-          " input[type=password]"
+          " input[type=password]" +
+          dom +
+          " input[type=checkbox]"
       );
       var res = {};
       res.flag = true;
 
       inputs.each(function () {
-        val = $(this).val();
-        req = $(this).attr("required");
+        let val = $(this).val().trim();
+        let req = $(this).attr("data-required");
 
+        var i = 0;
         if (val == "" && req != undefined) {
-          if (res.flag == true) res.dom = $(this);
+          if(i == 0) (this).focus();
+          i++;
           res.flag = false;
-
-          $(this).parent().addClass("has-danger");
           $(this).addClass("border-danger");
-          var attr = $(this).attr("data-targeterror");
-          if (typeof attr !== typeof undefined && attr !== false) {
-            $(attr).addClass("has-danger");
-          }
-        } else {
-          type = $(this).attr("data-type");
-          req = $(this).attr("required");
-          if (typeof type != "undefined" && req != undefined) {
-            if (form.validate(type, val) == false) {
-              if (res.flag == true) res.dom = $(this);
-              res.flag = false;
-
-              $(this).parent().addClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).addClass("has-danger");
-              }
-            } else {
-              $(this).parent().removeClass("has-danger");
-              var attr = $(this).attr("data-targeterror");
-              if (typeof attr !== typeof undefined && attr !== false) {
-                $(attr).removeClass("has-danger");
-              }
-            }
-          } else {
-            $(this).parent().removeClass("has-danger");
-            $(this).removeClass("border-danger");
-            var attr = $(this).attr("data-targeterror");
-            if (typeof attr !== typeof undefined && attr !== false) {
-              $(attr).removeClass("has-danger");
-            }
+          if(!$(this).next("small").length) {
+            $(this).after('<small class="text-danger">This field is required</small>'); 
           }
         }
       });
@@ -236,7 +462,11 @@ var baseJS = {
   },
   submitProblem : {
     
-    modal : `
+
+      modal : '',
+      init: function () {
+
+        baseJS.submitProblem.modal  = `
           <div class="modal fade" id="submitProblemModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
              <div class="modal-dialog" role="document">
                <div class="modal-content">
@@ -264,14 +494,13 @@ var baseJS = {
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-primary btn-sm save" >Save changes</button>
+                      <button type="button" class="btn btn-primary btn-sm save" >`+baseJS.lang.SAVE_CHANGES+`</button>
                     </div>
                  </form>
                </div>
              </div>
            </div>
-        `,
-      init: function () {
+        `;
         let container = "#submitProblem";
         //Add convas JS
         $('html').append('<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>');
@@ -312,7 +541,7 @@ var baseJS = {
             data: new FormData($(container +" form")[0]),
             //headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
             success: function (res) {
-              $("#submitProblemModal .modal-body").html('<p>Problem has been submitted.</p>');
+              $("#submitProblemModal .modal-body").html('<p>'+baseJS.lang.ProHBS+'</p>');
               $("#submitProblemModal .save").remove();
             },
           });
@@ -369,12 +598,6 @@ var baseJS = {
         baseJS.ajaxModel.deleteRecord(that);
       });
 
-      /*
-      EDIT THE NOTE / DESCRIPTION  / All fields
-      */
-     
-     
-
     },
     /*
     Load Modal
@@ -391,12 +614,18 @@ var baseJS = {
         success: function (result) {
           $(".all-modals .modal-content").html(result);
           try {
-            FormInputMask.init();
-            ComponentsDateTimePickers.init();
+            baseJS.inputMasking.customMasking();
           }
           catch(e) {
             console.log("Unable to load Forminput | Timepickers");
           }
+          try {
+            baseJS.select2.initModal();
+          }
+          catch(e) {
+            console.log("Unable to load select2");
+          }
+          
         },
 
       });
@@ -410,13 +639,11 @@ var baseJS = {
       var btn = $(that).find("button[type=submit]");
       var btntxt = $(btn).html();
 
-      res = baseJS.formValidation.validate("form.make_ajax");
+      let iValid = baseJS.formValidation.validate('form[data-action="make_ajax"]');
 
-      if (res.flag == false) {
-        res.dom.focus().scrollTop();
-        return false;
-      }
-      addWait(btn, "working...");
+      if (iValid.flag == false) return false;
+    
+      addWait(btn, baseJS.lang.WORKING+"...");
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -432,7 +659,7 @@ var baseJS = {
           return false;
         },
         error: function (err) {
-          toastr["error"](err.responseJSON.message, "Alert!");
+          baseJS.afterAajaxCall('error',err.responseJSON.message);
           removeWait(btn, btntxt);
           return false;
         },
@@ -453,7 +680,7 @@ var baseJS = {
         res.dom.focus().scrollTop();
         return false;
       }
-      addWait(btn, "working");
+      addWait(btn, baseJS.lang.WORKING);
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -516,12 +743,12 @@ var baseJS = {
     init:function() {
      $(document).ready(function(){
       //Append edit button
-      var selector =  "#editable";
+      var selector =  '[data-action="editable"]';
       var preValue = "";
 
       $(selector + " [data-id]").each(function(index, value) {
         if($(this).attr("data-input") == "text" || $(this).attr("data-input") == "textarea") {
-          $(this).append(' <a href="#" class="edit-button" >edit</a>');
+          $(this).append(' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'</a>');
         }
         
       });
@@ -536,18 +763,19 @@ var baseJS = {
         let field = $(this).parent().attr("data-field");
         let dataId = $(this).parent().attr("data-id");
 
+
         preValue = text;
 
         if(input == "text") {
-          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+          $(this).parent().html('<input type="text" name="'+field+'" value="'+text+'" data-id="'+dataId+'" class="form-control" /> <a class="update-button" href="javascript:void(0)"> '+baseJS.lang.UPDATE+' </a>| <a href="javascript:void(0)" class="cancel-button"> '+baseJS.lang.CANCEL+' </a>');
         }
         if(input == "textarea") {
-          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> update </a>| <a href="javascript:void(0)" class="cancel-button"> cancel </a>');
+          $(this).parent().html('<textarea class="form-control" name="'+field+'" data-id="'+dataId+'" >'+text+'</textarea> <a class="update-button" href="javascript:void(0)"> '+baseJS.lang.UPDATE+' </a>| <a href="javascript:void(0)" class="cancel-button"> '+baseJS.lang.CANCEL+' </a>');
         }
         
       });
       $(document).on('click',selector+" .cancel-button",function(e) {
-        $(this).parent().html(preValue+' <a href="#" class="edit-button" >edit<a/>');
+        $(this).parent().html(preValue+' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'<a/>');
       });
 
       $(document).on('click',selector+" .update-button",function(e) {
@@ -572,7 +800,7 @@ var baseJS = {
           dataType: "json",
           headers: { "X-CSRF-TOKEN": baseJS.csrf_token },
           success:function(res){
-              that.parent().html(text+' <a href="#" class="edit-button" >edit<a/>');
+              that.parent().html(text+' <a href="#" class="edit-button" >'+baseJS.lang.EDIT+'<a/>');
           },
           error:function(error){
             console.log(error);
@@ -662,7 +890,7 @@ var baseJS = {
           var form = $(this).closest('form').serialize();
           var btn = this;
           var btntxt = $(btn).html();
-          addWait(btn, "working...");
+          addWait(btn, baseJS.lang.WORKING+"...");
           $.ajax({
              type: "POST",
              cache: false,
@@ -704,18 +932,6 @@ function extractExtension(fileName) {
   return fileName.substr(fileName.lastIndexOf('.') + 1);
 }
 
-// SEO URL method
-function converToSEO(txt_src){
- var output = txt_src.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,"-").toLowerCase();
- /* remove first dash */
- if(output.charAt(0) == '-') output = output.substring(1);
- /* remove last dash */
- var last = output.length-1;
- if(output.charAt(last) == '-') output = output.substring(0, last);
- 
- return output;
-}
-
 
 // Add wait before ajax
 function addWait(dom, lable) {
@@ -753,24 +969,7 @@ function ImportaddWaitWithoutText(dom) {
 
 
 $(document).ready(function () {
-  /*
-  SEO URL
-  */
-  $(document).on("keyup", ".seo-url", function (event) {
-    let val = $(this).val();
-    let target = $(this).attr("data-target");
-    $(target).val(converToSEO(val));
-  });
-
-  /*
-  NO SPACE
-  */
-  $(document).on("keypress", ".nospace", function (event) {
-    if (event.keyCode == 32) {
-        return false;
-    }
-  });
-
+  
   /*
   UPDAT TEXT OF ONE FILED WHEN TEXT OF SECOND FILED UPDATED
   */
@@ -950,80 +1149,6 @@ $(document).ready(function () {
   });
 });
 /*
-DASHBOARD DATE RANGE PICKER FORM SUBMIT
-*/
-initDashboardDaterange = function() {
-    if (!jQuery().daterangepicker) {
-        return;
-    }
-    //qaiser here
-    $('#header-date-range').daterangepicker({
-        "ranges": {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-            'Last 7 Days': [moment().subtract('days', 6), moment()],
-            'Last 30 Days': [moment().subtract('days', 29), moment()],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-        },
-        maxDate: new Date(),
-        startDate: $("#daterangeform #start_date").val(),
-        endDate: $("#daterangeform #end_date").val(),
-        "locale": {
-            "format": "YYYY-MM-DD",
-            "separator": " - ",
-            "applyLabel": "Apply",
-            "cancelLabel": "Cancel",
-            "fromLabel": "From",
-            "toLabel": "To",
-            "customRangeLabel": "Custom",
-            "daysOfWeek": [
-                "Su",
-                "Mo",
-                "Tu",
-                "We",
-                "Th",
-                "Fr",
-                "Sa"
-            ],
-            "monthNames": [
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December"
-            ],
-            "firstDay": 1
-        },
-        //"startDate": "11/08/2015",
-        //"endDate": "11/14/2015",
-        opens: (App.isRTL() ? 'right' : 'left'),
-    }, function(start, end, label) {
-        if ($('#header-date-range').attr('data-display-range') != '0') {
-            $('#header-date-range span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-        }
-        $("#daterangeform #start_date").val(start.format("YYYY-MM-DD",));
-        $("#daterangeform #end_date").val(end.format("YYYY-MM-DD",));
-        
-        $("#daterangeform").submit();
-    });
-
-     if ($('#header-date-range').attr('data-display-range') != '0') {
-        start_date = moment($("#daterangeform #start_date").val()).format('MMMM D, YYYY');
-        end_date = moment($("#daterangeform #end_date").val()).format('MMMM D, YYYY');
-
-        $('#header-date-range span').html(start_date + ' - ' + end_date);
-    }
-    $('#header-date-range').show();
-}
-/*
 FUNCTION REMOVE PARAMTER FROM QUERY STRING
 */
 function removeURLParameter(url, parameter) {
@@ -1081,27 +1206,6 @@ var form = {
 };
 
 
-try {
-  toastr.options = {
-    closeButton: true,
-    debug: false,
-    positionClass: "toast-top-right",
-    onclick: null,
-    showDuration: "1000",
-    hideDuration: "1000",
-    timeOut: "5000",
-    extendedTimeOut: "1000",
-    showEasing: "swing",
-    hideEasing: "linear",
-    showMethod: "fadeIn",
-    hideMethod: "fadeOut",
-  };
-}
-catch(e) {
-    console.log('toastr is not defined');
-}
-
-
 function readURL(input) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -1143,25 +1247,7 @@ $(".upload-image").change(function () {
   readURL(this);
 });
 
-/*
-SELECT2
-*/
-try {
-  $(".select2box").select2({
-    placeholder: "Select One",
-    enableFiltering: true,
-    allowClear: true,
-  });
-}catch(err) {console.log("selct 2 is not deined")}
 
-function initiateSelect2() {
-  $(".select2").select2({
-    placeholder: " ",
-    allowClear: true,
-    dropdownParent: $("#data_modal"),
-    theme: "bootstrap",
-  });
-}
 
 /*
 ------------------------------------------------START - Comment box with screenshot upload-----------------------------------------------------
@@ -1221,6 +1307,8 @@ $(document).ready(function() {
                 dataType: "json",
                 headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
                 success:function(res){
+          
+                    
                   //After ajax complete add delete button
                   $(container+" .images-list #"+uniqueID+" .delete").html('x');
                   //After upload remove the uploading  text
