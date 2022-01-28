@@ -536,8 +536,6 @@ var baseJS = {
         let field = $(this).parent().attr("data-field");
         let dataId = $(this).parent().attr("data-id");
 
-        console.log(text);
-
         preValue = text;
 
         if(input == "text") {
@@ -1223,8 +1221,6 @@ $(document).ready(function() {
                 dataType: "json",
                 headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
                 success:function(res){
-                  console.log(res);
-                    
                   //After ajax complete add delete button
                   $(container+" .images-list #"+uniqueID+" .delete").html('x');
                   //After upload remove the uploading  text
