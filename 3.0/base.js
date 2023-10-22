@@ -669,6 +669,7 @@ var baseJS = {
         },
         success: function (res) {
           removeWait(btn, btntxt);
+          console.log(res.flag);
           if (res.flag == true) {
             baseJS.afterAajaxCall("success", res, selector);
           } else {
