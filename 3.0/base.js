@@ -36,7 +36,7 @@ var baseJS = {
     .on("load", callback);
   },
   // After Every ajax call
-  afterAajaxCall:function(status, res) {
+  afterAajaxCall:function(status, res, selector) {
 
     if(status == 'success')  {
 
@@ -645,6 +645,7 @@ var baseJS = {
       if (iValid.flag == false) return false;
     
       addWait(btn, baseJS.lang.WORKING+"...");
+      var selector = that;
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -656,7 +657,7 @@ var baseJS = {
         headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
         success: function (res) {
           removeWait(btn, btntxt);
-          baseJS.afterAajaxCall('success',res);
+          baseJS.afterAajaxCall('success',res, selector);
           return false;
         },
         error: function (err) {
