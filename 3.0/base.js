@@ -669,7 +669,11 @@ var baseJS = {
         },
         success: function (res) {
           removeWait(btn, btntxt);
-          baseJS.afterAajaxCall("success", res, selector);
+          if (res.flag == true) {
+            baseJS.afterAajaxCall("success", res, selector);
+          } else {
+            baseJS.afterAajaxCall("error", res, selector);
+          }
           return false;
         },
         error: function (err) {
