@@ -12,6 +12,8 @@ var baseJS = {
   current_url: "",
   csrf_token: "",
   cdn: "https://dixeam.com/cdn",
+  langCDN:
+    "https://cdn.statically.io/gh/link2qaiser/basejs/master/3.0/lang/en.js",
 
   lang: {},
   /*
@@ -87,13 +89,10 @@ var baseJS = {
     Intialize the Language
     */
 
-    baseJS.loadScript(
-      baseJS.cdn + "/basejs/3.0/lang/" + param.lang + ".js",
-      function () {
-        baseJS.lang = lang;
-        baseJS.loadLibs(param);
-      }
-    );
+    baseJS.loadScript(baseJS.langCDN, function () {
+      baseJS.lang = lang;
+      baseJS.loadLibs(param);
+    });
   },
   loadLibs: function (param) {
     /*
