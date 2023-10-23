@@ -506,9 +506,9 @@ var baseJS = {
         `;
       let container = "#submitProblem";
       //Add convas JS
-      $("html").append(
-        '<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>'
-      );
+      // $("html").append(
+      //   '<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>'
+      // );
 
       //Append Sub Problem Button
       $(container).append(
