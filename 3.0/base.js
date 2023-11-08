@@ -12,11 +12,8 @@ var baseJS = {
   current_url: "",
   csrf_token: "",
   cdn: "https://dixeam.com/cdn",
-<<<<<<< HEAD
-=======
   langCDN:
     "https://cdn.statically.io/gh/link2qaiser/basejs/master/3.0/lang/en.js",
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
 
   lang: {},
   /*
@@ -42,11 +39,7 @@ var baseJS = {
       .on("load", callback);
   },
   // After Every ajax call
-<<<<<<< HEAD
-  afterAajaxCall: function (status, res) {
-=======
   afterAajaxCall: function (status, res, selector) {
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
     if (status == "success") {
       if (res.flag == true) {
         try {
@@ -62,15 +55,9 @@ var baseJS = {
       let afteAction = $(selector).attr("data-action-after");
       if (afteAction == "close") {
         $("#data_modal").modal("hide");
-<<<<<<< HEAD
-      } else if (res.action == "reload") {
-        window.location.reload();
-      } else if (res.action == "redirect") {
-=======
       } else if (afteAction == "reload") {
         window.location.reload();
       } else if (afteAction == "redirect") {
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
         window.location.href = res.url;
       } else {
         try {
@@ -102,20 +89,10 @@ var baseJS = {
     Intialize the Language
     */
 
-<<<<<<< HEAD
-    baseJS.loadScript(
-      baseJS.cdn + "/basejs/3.0/lang/" + param.lang + ".js",
-      function () {
-        baseJS.lang = lang;
-        baseJS.loadLibs(param);
-      }
-    );
-=======
     baseJS.loadScript(baseJS.langCDN, function () {
       baseJS.lang = lang;
       baseJS.loadLibs(param);
     });
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
   },
   loadLibs: function (param) {
     /*
@@ -398,10 +375,7 @@ var baseJS = {
               }
             }
           } else {
-<<<<<<< HEAD
-=======
             console.log(val);
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
             $(this).removeClass("border-danger");
             $(this).next("small").remove();
           }
@@ -532,15 +506,9 @@ var baseJS = {
         `;
       let container = "#submitProblem";
       //Add convas JS
-<<<<<<< HEAD
-      $("html").append(
-        '<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>'
-      );
-=======
       // $("html").append(
       //   '<script type="text/javascript" src="https://dixeam.com/cdn/plugins/html2canvas/html2canvas.min.js"></script>'
       // );
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
 
       //Append Sub Problem Button
       $(container).append(
@@ -686,10 +654,7 @@ var baseJS = {
       if (iValid.flag == false) return false;
 
       addWait(btn, baseJS.lang.WORKING + "...");
-<<<<<<< HEAD
-=======
       var selector = that;
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
       $.ajax({
         type: $(that).attr("method"),
         contentType: false,
@@ -703,16 +668,12 @@ var baseJS = {
         },
         success: function (res) {
           removeWait(btn, btntxt);
-<<<<<<< HEAD
-          baseJS.afterAajaxCall("success", res);
-=======
           console.log(res.flag);
           if (res.flag == true) {
             baseJS.afterAajaxCall("success", res, selector);
           } else {
             baseJS.afterAajaxCall("error", res, selector);
           }
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
           return false;
         },
         error: function (err) {
@@ -821,11 +782,8 @@ var baseJS = {
           let field = $(this).parent().attr("data-field");
           let dataId = $(this).parent().attr("data-id");
 
-<<<<<<< HEAD
-=======
           console.log(text);
 
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
           preValue = text;
 
           if (input == "text") {
@@ -1024,6 +982,7 @@ var baseJS = {
             return;
           }
           var form = $(this).closest("form").serialize();
+          var formSeletor = $(this).closest("form");
           var btn = this;
           var btntxt = $(btn).html();
           addWait(btn, baseJS.lang.WORKING + "...");
@@ -1038,11 +997,11 @@ var baseJS = {
             },
             success: function (res) {
               removeWait(btn, btntxt);
-              baseJS.afterAajaxCall("success", res);
+              baseJS.afterAajaxCall("success", res, formSeletor);
             },
             error: function (err) {
               removeWait(btn, btntxt);
-              baseJS.afterAajaxCall("error", res);
+              baseJS.afterAajaxCall("error", res, formSeletor);
             },
           });
         }
@@ -1443,15 +1402,6 @@ $(document).ready(function () {
               "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (res) {
-<<<<<<< HEAD
-              //After ajax complete add delete button
-              $(container + " .images-list #" + uniqueID + " .delete").html(
-                "x"
-              );
-              //After upload remove the uploading  text
-              $(container + " .images-list #" + uniqueID + " .upload").html("");
-
-=======
               console.log(res);
 
               //After ajax complete add delete button
@@ -1461,7 +1411,6 @@ $(document).ready(function () {
               //After upload remove the uploading  text
               $(container + " .images-list #" + uniqueID + " .upload").html("");
 
->>>>>>> 1b455dc02c8c9817d6788c5a87f602a765587561
               //Add files into  container later to  add comments
               let files = $("#images").val();
               if (files == "") {
