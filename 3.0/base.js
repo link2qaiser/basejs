@@ -412,7 +412,9 @@ var baseJS = {
       res.flag = true;
 
       inputs.each(function () {
-        let val = $(this).val().trim();
+        let val = $(this).val();
+        if (typeof $(this).val() == "string") val = val.trim();
+
         let req = $(this).attr("data-required");
 
         var i = 0;
