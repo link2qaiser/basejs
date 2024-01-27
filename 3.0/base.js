@@ -577,7 +577,7 @@ var baseJS = {
         `);
         $(document).on("click", '[data-action="data_modal"]', function (e) {
           let url = $(this).attr("data-url");
-          baseJS.ajaxModel.loadModal(url);
+          baseJS.ajaxModel.loadModal(url, this);
         });
       });
 
@@ -616,7 +616,8 @@ var baseJS = {
     /*
     Load Modal
     */
-    loadModal: function (url) {
+    loadModal: function (url, that) {
+      var tht = that;
       $("#data_modal .modal-content").html(
         '<p style="text-align: center;"><br/> <i class="fa fa-spinner fa-spin"></i>  Please wait loading...</p>'
       );
@@ -637,6 +638,8 @@ var baseJS = {
           } catch (e) {
             console.log("Unable to load select2");
           }
+          // Call call-back func
+          eval($(tht).attr("data-callback"));
         },
       });
     },
