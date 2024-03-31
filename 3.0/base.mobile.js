@@ -20,7 +20,9 @@ var baseMobileJS = {
                             baseMobileJS.Notification.showSucess(res.msg);
                             localStorage.setItem("isLogin",true);
                             localStorage.setItem("token",res.token);
+                            localStorage.setItem("user",JSON.stringify(res.user));
                             window.location.href= $(form).attr("data-redirect");
+                            
                         }else {
                             baseMobileJS.Notification.showError(res.msg);
                         }
@@ -31,8 +33,9 @@ var baseMobileJS = {
                 e.preventDefault();
                 localStorage.removeItem("isLogin");
                 localStorage.removeItem("token");
+                localStorage.removeItem("user");
                 window.location.href= $(this).attr("data-redirect");
-                
+
             });
         }
     },
