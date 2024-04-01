@@ -112,14 +112,21 @@ var baseMobileJS = {
     },
     UserLocation: {
         update(myCallback) {
-            const successCallback = (position) => {
-                myCallback(position.coords);
+            var successHandler = function(position) { 
+                myCallback(position.coords); 
             };
-            const errorCallback = (error) => {
-                myCallback(false);
-                //baseMobileJS.UserLocation.error = true;
-            };
-            navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+            var errorHandler = function (errorObj) { 
+               myCallback(false);
+            }; 
+            navigator.geolocation.getCurrentPosition(successHandler, errorHandler,{enableHighAccuracy: true, maximumAge: 10000});
+            // const successCallback = (position) => {
+            //     myCallback(position.coords);
+            // };
+            // const errorCallback = (error) => {
+            //     myCallback(false);
+            //     //baseMobileJS.UserLocation.error = true;
+            // };
+            // navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
         }
     },
     init(param) {
